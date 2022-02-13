@@ -90,8 +90,8 @@ contract Vault {
 		uint256 fee = balancesOf[user].mul(liquidationFee).div(
 			10**LIQUIDATION_DECIMALS
 		);
+		balancesOf[msg.sender] = fee;
 		pendingLiquidation = balancesOf[user].sub(fee);
-		liquidationClaimable[msg.sender] = fee;
 		balancesOf[user] = 0;
 	}
 }
