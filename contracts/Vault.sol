@@ -2,31 +2,33 @@
 pragma solidity ^0.8.0;
 
 import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-contract Vault {
+contract Vault is Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public oracle;
     IERC20Mintable public ribbonUSD;
     IRibbonThetaVault public collateral;
+    IERC20Mintable public rewardToken;
     mapping(address => uint256) public balancesOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
-    uint256 public pendingLiquidation;
 
-    uint256 public liquidationFee = 50;
-    uint256 public LIQUIDATION_DECIMALS = 4;
-    uint256 public collateralizationFactor = 95;
+    uint256 public constant LIQUIDATION_FEE = 500;
+    uint256 public constant DEPOSIT_FEE = 100;
+    uint256 public constant COLATERALIZATION_FACTOR = 9500;
+    uint256 public constant FEE_DECIMALS = 4;
 
     constructor(
         address _collateral,
         address _ribbonUSD,
         address _oracle
-    ) public {
+    ) {
         collateral = IRibbonThetaVault(_collateral);
         ribbonUSD = IERC20Mintable(_ribbonUSD);
         oracle = AggregatorV3Interface(_oracle);
@@ -48,7 +50,7 @@ contract Vault {
 
     function borrow(uint256 amount) public {
         require(amount < maximumBorrowAmount(msg.sender), "Borrowing too much");
-        borrowed[msg.sender] = amount;
+        borrowed[msg.sender] = borrowed[msg.sender].add(amount);
         ribbonUSD.mint(msg.sender, amount);
     }
 
@@ -59,6 +61,14 @@ contract Vault {
         );
         ribbonUSD.burn(msg.sender, amount);
         borrowed[msg.sender] = borrowed[msg.sender].sub(amount);
+    }
+
+    function addStableToken(address token) public onlyOwner {
+        allowedStables[token] = true;
+    }
+
+    function removeStableToken(address token) public onlyOwner {
+        allowedStables[token] = true;
     }
 
     function repayWithStable(address token, uint256 amount) public {
@@ -86,8 +96,8 @@ contract Vault {
     function maximumBorrowAmount(address user) public view returns (uint256) {
         return
             getValueOfCollateral(balancesOf[user])
-                .mul(collateralizationFactor)
-                .div(100);
+                .mul(COLATERALIZATION_FACTOR)
+                .div(FEE_DECIMALS);
     }
 
     function getValueOfCollateral(uint256 amount)
@@ -110,8 +120,8 @@ contract Vault {
 
     function liquidate(address user) public returns (bool) {
         require(getValueOfCollateral(balancesOf[user]) < borrowed[user]);
-        uint256 fee = balancesOf[user].mul(liquidationFee).div(
-            10**LIQUIDATION_DECIMALS
+        uint256 fee = balancesOf[user].mul(LIQUIDATION_FEE).div(
+            10**FEE_DECIMALS
         );
         balancesOf[msg.sender] = balancesOf[msg.sender].add(fee);
         balancesOf[user] = 0;
