@@ -5,6 +5,7 @@ import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Vault {
 	using SafeMath for uint256;
@@ -15,6 +16,7 @@ contract Vault {
 	mapping(address => uint256) public balancesOf;
 	mapping(address => uint256) public borrowed;
 	mapping(address => uint256) public liquidationClaimable;
+	mapping(address => bool) public allowedStables;
 	uint256 public pendingLiquidation;
 
 	uint256 public liquidationFee = 50;
@@ -51,7 +53,7 @@ contract Vault {
 		ribbonUSD.mint(msg.sender, amount);
 	}
 
-	function payback(uint256 amount) public {
+	function repay(uint256 amount) public {
 		require(
 			amount <= borrowed[msg.sender],
 			"Amount is greater than borrowed"
@@ -59,6 +61,29 @@ contract Vault {
 		ribbonUSD.burn(msg.sender, amount);
 		borrowed[msg.sender] = borrowed[msg.sender].sub(amount);
 	}
+	
+	function repayWithStable(address token, uint256 amount) public {
+		require(allowedStables[token]);
+		require(
+			amount <= borrowed[msg.sender],
+			"Amount is greater than borrowed"
+		);
+		IERC20(token).transferFrom(msg.sender, address(this), amount);
+		borrowed[msg.sender] = borrowed[msg.sender].sub(amount);
+	}
+	
+	function mintUsdB(address token, uint256 amount) public{
+		require(allowedStables[token]);
+		IERC20(token).transferFrom(msg.sender, address(this), amount);
+		ribbonUSD.mint(msg.sender, amount);
+	}
+	
+	function burnUsdB(address token, uint256 amount) public{
+		require(allowedStables[token]);
+		IERC20Mintable(token).transferFrom(address(this), msg.sender, amount);
+		ribbonUSD.burn(msg.sender, amount);
+	}
+	
 
 	function maximumBorrowAmount(address user) public view returns (uint256) {
 		return
