@@ -3,7 +3,7 @@
 ### Purpose:
 
 To Earn yield in multiple different avenues. Reutilize collateral writing options for yield elsewhere
-Newer strategies can be created on top of cdp option tokens like, stketh-ethCoveredCall, or 2x leveraging ethCoveredCall-ethCoveredCall.
+Newer strategies can be created on top of cdp option tokens like 2x leveraging your options writing to earn more yield.
 
 ### How:
 
