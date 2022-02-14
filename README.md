@@ -19,3 +19,5 @@ Bowties: governance and dividend token of the protocol. Fees are received by tok
 ### Future Efforts:
 
 There is no reason why usdb can't be multicollateralized by other exotic derivatives products. We can use yieldbearing tokens, wrapped staked tokens, indexed tokens, etc.
+
+###
