@@ -105,13 +105,12 @@ describe("Vault", function () {
 });
 
 describe("UsdB", function () {
+  // eslint-disable-next-line no-unused-vars
   let sender: SignerWithAddress;
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let rUsd: MockUSD;
   let vault: Vault;
-  let collateralValue: number;
-  let initSnapshotId: string;
 
   before(async function () {
     [sender] = await ethers.getSigners();
@@ -132,7 +131,6 @@ describe("UsdB", function () {
       rUsd.address,
       oracle.address
     );
-    collateralValue = 295236344964;
   });
   it("should transfer ownership", async function () {
     await rUsd.transferOwnership(vault.address);
