@@ -4,13 +4,13 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MockUSD is ERC20, Ownable {
-	constructor() ERC20("Ribbon USD", "rUSD") {}
+    constructor() ERC20("Ribbon USD", "rUSD") {}
 
-	function mint(address receiver, uint256 amount) public onlyOwner{
-		_mint(receiver, amount);
-	}
+    function mint(address receiver, uint256 amount) public onlyOwner {
+        _mint(receiver, amount);
+    }
 
-	function burn(address receiver, uint256 amount) public onlyOwner {
-		_burn(receiver, amount);
-	}
+    function burn(address receiver, uint256 amount) public onlyOwner {
+        _burn(receiver, amount);
+    }
 }
