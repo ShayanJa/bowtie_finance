@@ -15,7 +15,6 @@ contract Vault {
 	IRibbonThetaVault public collateral;
 	mapping(address => uint256) public balancesOf;
 	mapping(address => uint256) public borrowed;
-	mapping(address => uint256) public liquidationClaimable;
 	mapping(address => bool) public allowedStables;
 	uint256 public pendingLiquidation;
 
@@ -115,8 +114,7 @@ contract Vault {
 		uint256 fee = balancesOf[user].mul(liquidationFee).div(
 			10**LIQUIDATION_DECIMALS
 		);
-		balancesOf[msg.sender] = fee;
-		pendingLiquidation = balancesOf[user].sub(fee);
+		balancesOf[msg.sender] = balancesOf[msg.sender].add(fee);
 		balancesOf[user] = 0;
 	}
 }

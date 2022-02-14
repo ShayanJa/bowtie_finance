@@ -31,7 +31,7 @@ describe("Vault", function () {
       rUsd.address,
       oracle.address
     );
-		await rUsd.transferOwnership(vault.address)
+    await rUsd.transferOwnership(vault.address);
     collateralValue = 295236344964;
   });
 
@@ -134,14 +134,14 @@ describe("UsdB", function () {
     );
     collateralValue = 295236344964;
   });
-	it ("should transfer ownership", async function() {
-		await rUsd.transferOwnership(vault.address)
-	})
-	
-	it("should be owned by the vault", async function () {
-		const owner = await rUsd.owner()
-		expect(owner).to.be.eq(vault.address)
-	})
+  it("should transfer ownership", async function () {
+    await rUsd.transferOwnership(vault.address);
+  });
+
+  it("should be owned by the vault", async function () {
+    const owner = await rUsd.owner();
+    expect(owner).to.be.eq(vault.address);
+  });
 });
 
 async function revertToSnapShot(id: string) {
