@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../assets/bowtielogo.png";
+import { useWeb3Modal } from "../state/application/hooks";
 
 const Nav = () => {
+  const [connectWallet] = useWeb3Modal();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const location = useLocation();
@@ -48,6 +50,7 @@ const Nav = () => {
             <div className="flex-shrink-0 order-last">
               <button
                 type="submit"
+                onClick={connectWallet}
                 className="inline-flex justify-center ml-5 py-2 px-6 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Connect Wallet
