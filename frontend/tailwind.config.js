@@ -7,8 +7,7 @@ module.exports = {
     extend: {
       fontWeight: ['hover', 'focus'],
       fontFamily: {
-        display: ["Poppins", "Poppins"],
-        body: ["Poppins", "Poppins"],
+        'sans': ['nunito', 'sans-serif']   
       },
     },
   },

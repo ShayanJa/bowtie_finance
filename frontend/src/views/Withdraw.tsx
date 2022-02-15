@@ -1,20 +1,22 @@
-import React from 'react'
-import Header from '../components/Header'
+import React from "react";
+import Header from "../components/Header";
 
 const Withdraw = () => {
   return (
     <>
       <Header title="Withdraw" />
       <main>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 bg-blend-multiply">
+        <div className="max-w-4xl mx-auto py-4 sm:px-6 lg:px-8 bg-blend-multiply">
           <div className="px-4 py-6 sm:px-0">
             <form>
               <div className="overflow-hidden rounded-3xl">
-                <div className="px-4 py-5 bg-gray-800 sm:p-6">
+                <div className="px-4 py-6 bg-gray-800 sm:p-6">
                   <div className="grid grid-cols-6 gap-6">
-              
                     <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="country" className="pb-2 block text-xl font-medium text-white">
+                      <label
+                        htmlFor="country"
+                        className="pb-2 block text-xl font-medium text-white"
+                      >
                         Amount
                       </label>
                       <input
@@ -26,7 +28,10 @@ const Withdraw = () => {
                     </div>
 
                     <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="country" className="block pb-2 text-xl font-medium text-white">
+                      <label
+                        htmlFor="country"
+                        className="block pb-2 text-xl font-medium text-white"
+                      >
                         Token
                       </label>
                       <select
@@ -40,9 +45,17 @@ const Withdraw = () => {
                         <option>ONE</option>
                       </select>
                     </div>
-
                   </div>
-                          <button
+                  <div className="py-8">
+                    <span className="text-xl font-medium text-white">
+                      Balance:
+                    </span>
+                    <span className="pl-4 text-2xl font-semibold text-white">
+                      2.5 ETH
+                    </span>
+                  </div>
+
+                  <button
                     type="submit"
                     className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
@@ -53,11 +66,9 @@ const Withdraw = () => {
             </form>
           </div>
         </div>
-
-
       </main>
     </>
   );
 };
 
-export default Withdraw
+export default Withdraw;
