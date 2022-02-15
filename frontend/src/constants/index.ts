@@ -29,3 +29,10 @@ export const VAULT_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.NOT_CONNECTED]: "",
   [ChainId.AVAX]: "",
 };
+
+export const RIBBON_VAULT_COVEREDCALL_ADDRESS: {
+  [chainId in ChainId]: string;
+} = {
+  [ChainId.NOT_CONNECTED]: "0x98d03125c62DaE2328D9d3cb32b7B969e6a87787",
+  [ChainId.AVAX]: "0x98d03125c62DaE2328D9d3cb32b7B969e6a87787",
+};

@@ -1,7 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
+import { useRibbon } from "../hooks/ribbon";
 
 const Deposit = () => {
+  const [getDeposits] = useRibbon();
+  const [balance, setBalance] = useState("0");
+  useEffect(() => {
+    const setup = async () => {
+      const [, , total] = await getDeposits();
+      setBalance(total);
+    };
+    setup();
+  });
   return (
     <>
       <Header title="Deposit" />
@@ -17,7 +27,7 @@ const Deposit = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Amount
+                        Amount:{balance}
                       </label>
                       <input
                         id="token"

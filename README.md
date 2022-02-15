@@ -1,4 +1,4 @@
-# CDPs on Automated options vaults
+# CDPs on Structured Products
 
 ### Purpose:
 
