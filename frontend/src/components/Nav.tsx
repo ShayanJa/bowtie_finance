@@ -1,24 +1,23 @@
-import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import Logo from '../assets/bowtielogo.png'
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import Logo from "../assets/bowtielogo.png";
 
 const Nav = () => {
-  const [showProfileMenu, setShowProfileMenu] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const location = useLocation()
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const location = useLocation();
 
   const links = [
+    { text: "Home", to: "/" },
+    { text: "Deposit", to: "/deposit" },
+    { text: "Withdraw", to: "/withdraw" },
+    { text: "Borrow", to: "/borrow" },
+    { text: "Payback", to: "/payback" },
+    { text: "Portfolio", to: "/portfolio" },
+  ];
 
-    { text: 'About', to: '/about' },
-    { text: 'Home', to: '/' },
-    { text: 'Deposit', to: '/deposit' },
-    { text: 'Withdraw', to: '/withdraw' },
-    { text: 'Borrow', to: '/borrow' },
-    { text: 'Payback', to: '/payback' },
-  ]
-
-  const activeClass = 'text-white bg-gray-900'
-  const inactiveClass = 'text-gray-300 hover:text-white hover:bg-gray-700'
+  const activeClass = "text-white bg-gray-900";
+  const inactiveClass = "text-gray-300 hover:text-white hover:bg-gray-700";
 
   return (
     <nav className="">
@@ -26,11 +25,7 @@ const Nav = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <img
-                className="h-8 w-8"
-                src={Logo}
-                alt="logo"
-              />
+              <img className="h-8 w-full" src={Logo} alt="logo" />
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
@@ -42,7 +37,7 @@ const Nav = () => {
                       location.pathname === link.to
                         ? activeClass
                         : inactiveClass
-                    } ${i > 0 && 'ml-4'}`}
+                    } ${i > 0 && "ml-4"}`}
                   >
                     {link.text}
                   </Link>
@@ -50,13 +45,13 @@ const Nav = () => {
               </div>
             </div>
 
-                        <div className="flex-shrink-0 order-last">
-                          <button
-                    type="submit"
-                    className="inline-flex justify-center ml-5 py-2 px-6 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Connect Wallet
-                  </button>
+            <div className="flex-shrink-0 order-last">
+              <button
+                type="submit"
+                className="inline-flex justify-center ml-5 py-2 px-6 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Connect Wallet
+              </button>
             </div>
           </div>
 
@@ -98,10 +93,8 @@ const Nav = () => {
           </div>
         </div>
       </div>
-
-
     </nav>
   );
 };
 
-export default Nav
+export default Nav;

@@ -1,10 +1,10 @@
 import React from "react";
 import Header from "../components/Header";
 
-const Deposit = () => {
+const Borrow = () => {
   return (
     <>
-      <Header title="Deposit" />
+      <Header title="Borrow" />
       <main>
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8 bg-blend-multiply">
           <div className="px-4 py-6 sm:px-0">
@@ -62,4 +62,4 @@ const Deposit = () => {
   );
 };
 
-export default Deposit;
+export default Borrow;

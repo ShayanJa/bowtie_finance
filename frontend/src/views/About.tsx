@@ -1,40 +1,31 @@
-import React from 'react'
-import Header from '../components/Header'
+import React from "react";
+import Header from "../components/Header";
 
 const About = () => {
   return (
-    <React.Fragment>
-      <Header title="About" />
+    <>
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="mt-10 mx-auto max-w-screen-xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
-                <h2 className="text-4xl tracking-tight leading-10 font-extrabold text-gray-900 sm:text-5xl sm:leading-none md:text-6xl">
-                  why?
-                  <br className="xl:hidden" />{' '}
-                  <a
-                    target="_blank"
-                    className="text-indigo-600 underline hover:text-indigo-500"
-                    href="https://tailwindcss.com"
-                  >
-                    Bowtie Finance
-                  </a>
+                <h2 className="text-7xl tracking-tight leading-10 font-extrabold text-white sm:text-5xl sm:leading-none md:text-6xl">
+                  Bowtie Finance
                 </h2>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  All the code present here is part of a free sample from{' '}
+                <p className="mt-3 text-base text-slate-200 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                  Finance test{" "}
                   <a
                     href="https://tailwindui.com"
                     className="text-indigo-600 underline hover:text-indigo-500"
                   >
-                    Tailwind UI
-                  </a>{' '}
+                    Made in Denver
+                  </a>{" "}
                   but, you don't need it.
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
                     <a
-                      href="https://github.com/sorxrob/vite-react-tailwind-starter"
+                      href=""
                       className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10"
                     >
                       Get started
@@ -54,8 +45,8 @@ const About = () => {
           </div>
         </div>
       </main>
-    </React.Fragment>
+    </>
   );
 };
 
-export default About
+export default About;
