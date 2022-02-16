@@ -20,6 +20,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
+    hardhat: {
+      chainId: 1,
+      forking: {
+        url: process.env.TESTNET_URL || "",
+        // blockNumber: BLOCK_NUMBER[CHAINID],
+      },
+    },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
       accounts:
