@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
+import {IStakingRewards} from './interfaces/IStakingRewards.sol';
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,7 +15,7 @@ contract Vault is Ownable {
     AggregatorV3Interface public oracle;
     IERC20Mintable public usdB;
     IRibbonThetaVault public collateral;
-    IERC20Mintable public rewardToken;
+    IStakingRewards public stakingRewards;
     mapping(address => uint256) public balancesOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
@@ -27,16 +28,21 @@ contract Vault is Ownable {
     constructor(
         address _collateral,
         address _usdB,
-        address _oracle
+        address _oracle,
+        address _stakingRewards
     ) {
         collateral = IRibbonThetaVault(_collateral);
         usdB = IERC20Mintable(_usdB);
         oracle = AggregatorV3Interface(_oracle);
+        stakingRewards = IStakingRewards(_stakingRewards);
     }
 
     function deposit(uint256 amount) public {
         collateral.transferFrom(msg.sender, address(this), amount);
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount);
+        uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
+        collateral.transfer(stakingRewards, fee);
+        stakingRewards.notifyRewardAmount(fee);
+        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount.sub(fee));
     }
 
     function withdraw(uint256 amount) public {
