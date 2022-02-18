@@ -7,7 +7,9 @@ import { TestUSDCoin__factory } from "../contracts/generated";
 export const useVault = (): [
   () => Promise<boolean>,
   () => Promise<void>,
-  (amount: string) => Promise<void>
+  (amount: string) => Promise<void>,
+  (amount: string) => Promise<void>,
+  () => Promise<string>
 ] => {
   const vault = useVaultContract();
   const { address, provider } = useActiveWeb3();
@@ -46,5 +48,26 @@ export const useVault = (): [
     [vault, address]
   );
 
-  return [allowance, approve, deposit];
+  const borrow = useCallback(
+    async (amount) => {
+      try {
+        const tx = await vault.borrow(utils.parseEther(amount));
+        await tx.wait();
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [vault, address]
+  );
+  const maxiumBorrow = useCallback(async () => {
+    try {
+      const maxi = await vault.maximumBorrowAmount(address);
+      return utils.formatEther(maxi);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
+
+  return [allowance, approve, deposit, borrow, maxiumBorrow];
 };

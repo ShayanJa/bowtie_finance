@@ -77,7 +77,10 @@ const Deposit = () => {
                     </div>
                   </div>
                   <button
-                  type="submit"
+                    type="submit"
+                    onClick={
+                      isAllowed ? () => deposit(amount) : () => approve()
+                    }
                     className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     {isAllowed ? "Deposit" : "Approve"}
