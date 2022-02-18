@@ -1,80 +1,58 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
+import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
+import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
-import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
+import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-// import {
-//     ReentrancyGuardUpgradeable
-// } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {IWETH} from "./interfaces/IWETH.sol";
-import {SubVault} from './SubVault.sol';
 
-contract Vault is Ownable {
+abstract contract BaseVault is Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public oracle;
     IERC20Mintable public usdB;
     IERC20 public collateral;
-    IERC20Mintable public rewardToken;
-    IRibbonThetaVault public stratVault;
+    IStakingRewards public stakingRewards;
     
-    mapping(address => uint256) public balanceOf;
-    mapping(address => uint256) public sharesOf;
+    mapping(address => uint256) public balancesOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
-    mapping(address => SubVault) private subVaults;
-
+    
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
     uint256 public constant COLATERALIZATION_FACTOR = 9500;
     uint256 public constant FEE_DECIMALS = 4;
-    address public immutable WETH;
 
     constructor(
         address _collateral,
         address _usdB,
         address _oracle,
-        address _stratVault,
-        address _WETH
+        address _stakingRewards
     ) {
+        collateral = IERC20(_collateral);
         usdB = IERC20Mintable(_usdB);
         oracle = AggregatorV3Interface(_oracle);
-        WETH = _WETH;
-        stratVault = IRibbonThetaVault(_stratVault);
-        collateral = IERC20(_collateral);
+        stakingRewards = IStakingRewards(_stakingRewards);
     }
-    
-    function depositETH() public payable{
-        require(msg.value > 0, "!value");
-        IWETH(WETH).deposit{value: msg.value}();
-        deposit(msg.value);
-    }
-    
+
     function deposit(uint256 amount) public {
-        require(amount > 0, "!value");
         collateral.transferFrom(msg.sender, address(this), amount);
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
-        SubVault vault = new SubVault(address(collateral), address(stratVault));
-        subVaults[msg.sender] = vault;
-        collateral.approve(address(vault), amount);
-        vault.deposit(amount);
+        uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
+        collateral.transfer(address(stakingRewards), fee);
+        stakingRewards.notifyRewardAmount(fee);
+        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount.sub(fee));
     }
-    function depositIntoSubVault(uint256 amount) public {
-        SubVault vault = subVaults[msg.sender];
-        vault.deposit(amount);
-    }
-  
+
     function withdraw(uint256 amount) public {
         require(
-            amount <= balanceOf[msg.sender],
+            amount <= balancesOf[msg.sender],
             "Must be less than deposited"
         );
-        balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
-        // stratVault.deposit(msg.sender, amount);
+        balancesOf[msg.sender] = balancesOf[msg.sender].sub(amount);
+        collateral.transfer(msg.sender, amount);
     }
 
     function borrow(uint256 amount) public {
@@ -123,23 +101,13 @@ contract Vault is Ownable {
     }
 
     function maximumBorrowAmount(address user) public view returns (uint256) {
-        uint256 val = subVaults[user].getValueInUnderlying();
         return
-            getValueOfCollateral(val)
+            getValueOfCollateral(balancesOf[user])
                 .mul(COLATERALIZATION_FACTOR)
                 .div(FEE_DECIMALS);
     }
 
-    function getValueOfCollateral(uint256 amount)
-        public
-        view
-        returns (uint256)
-    {
-        return
-            amount
-                .mul(getLatestPrice())
-                .div(10**oracle.decimals());
-    }
+    function getValueOfCollateral(uint256 amount) virtual public view returns (uint256);
 
     function getLatestPrice() public view returns (uint256) {
         (, int256 price, , , ) = oracle.latestRoundData();
@@ -147,13 +115,11 @@ contract Vault is Ownable {
     }
 
     function liquidate(address user) public returns (bool) {
-        require(getValueOfCollateral(subVaults[user].getValueInUnderlying()) < borrowed[user]);
-        uint256 fee = balanceOf[user].mul(LIQUIDATION_FEE).div(
+        require(getValueOfCollateral(balancesOf[user]) < borrowed[user]);
+        uint256 fee = balancesOf[user].mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        
-        
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(fee);
-        balanceOf[user] = 0;
+        balancesOf[msg.sender] = balancesOf[msg.sender].add(fee);
+        balancesOf[user] = 0;
     }
 }
