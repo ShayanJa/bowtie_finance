@@ -34,7 +34,8 @@
   },
   "scripts": {
     "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "mainnet-fork": "./scripts/mainnet-fork.sh"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.3.1",

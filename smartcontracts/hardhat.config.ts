@@ -44,9 +44,6 @@ const config: HardhatUserConfig = {
     },
     development: {
       url: "http://localhost:8545",
-      accounts: [
-        "b29a0364564fd631f976cd2aeee7f685354bbee359f323703704e4fcb864b36a",
-      ],
     },
   },
   gasReporter: {
