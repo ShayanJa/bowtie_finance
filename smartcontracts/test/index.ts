@@ -52,9 +52,16 @@ describe("Vault", function () {
     await rUsd.transferOwnership(vault.address);
   });
 
+  it("should deposit ETH", async function () {
+    initSnapshotId = await takeSnapshot();
+    await weth.approve(vault.address, initialDeposit);
+    await vault.depositETH({ value: initialDeposit });
+    expect(await vault.balanceOf(sender.address)).to.be.eq(initialDeposit);
+    expect(await weth.balanceOf(vault.address)).to.be.eq(0);
+    revertToSnapShot(initSnapshotId);
+  });
   it("Should mint tokens", async function () {
     await weth.deposit({ value: initialDeposit });
-
     const afterMint = await weth.balanceOf(sender.address);
     expect(afterMint).to.be.eq(initialDeposit);
   });

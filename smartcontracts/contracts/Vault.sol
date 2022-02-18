@@ -51,20 +51,20 @@ contract Vault is Ownable {
     function depositETH() public payable{
         require(msg.value > 0, "!value");
         IWETH(WETH).deposit{value: msg.value}();
-        deposit(msg.value);
+        _deposit(msg.value);
     }
     
     function deposit(uint256 amount) public {
         require(amount > 0, "!value");
         collateral.transferFrom(msg.sender, address(this), amount);
+        _deposit(amount);
+    }
+    
+    function _deposit(uint256 amount) internal {
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         SubVault vault = new SubVault(address(collateral), address(stratVault));
         subVaults[msg.sender] = vault;
         collateral.approve(address(vault), amount);
-        vault.deposit(amount);
-    }
-    function depositIntoSubVault(uint256 amount) public {
-        SubVault vault = subVaults[msg.sender];
         vault.deposit(amount);
     }
   

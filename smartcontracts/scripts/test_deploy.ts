@@ -25,9 +25,11 @@ async function main() {
 
   const Vault = await ethers.getContractFactory("Vault");
   const vault = await Vault.deploy(
-    ribbonVault.address,
+    weth.address,
     rUsd.address,
-    oracle.address
+    oracle.address,
+    ribbonVault.address,
+    weth.address
   );
 
   await vault.deployed();

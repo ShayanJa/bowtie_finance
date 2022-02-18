@@ -9,8 +9,10 @@ import NotFound from "./views/NotFound";
 import Deposit from "./views/Deposit";
 import Withdraw from "./views/Withdraw";
 import Borrow from "./views/Borrow";
+import { useSubscribe } from "./state/application/hooks";
 
 const App = () => {
+  useSubscribe();
   return (
     <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
       <Router>
