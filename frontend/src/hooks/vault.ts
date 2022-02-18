@@ -13,10 +13,15 @@ export const useVault = (): [
   const { address, provider } = useActiveWeb3();
 
   const allowance = useCallback(async () => {
-    const collateral = await vault.collateral();
-    const coin = TestUSDCoin__factory.connect(collateral, provider);
-    const x = await coin.allowance(address, vault.address);
-    return x.gt(0);
+    try {
+      const collateral = await vault.collateral();
+      const coin = TestUSDCoin__factory.connect(collateral, provider);
+      const x = await coin.allowance(address, vault.address);
+      return x.gt(0);
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
   }, [address, provider]);
 
   const approve = useCallback(async () => {

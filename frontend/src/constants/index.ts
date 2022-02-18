@@ -42,6 +42,13 @@ export const VAULT_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.FUJI]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
 };
 
+export const STAKING_ADDRESS: { [chainId in ChainId]: string } = {
+  [ChainId.NOT_CONNECTED]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
+  [ChainId.DEVELOPMENT]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
+  [ChainId.AVAX]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
+  [ChainId.FUJI]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
+};
+
 export const RIBBON_VAULT_COVEREDCALL_ADDRESS: {
   [chainId in ChainId]: string;
 } = {

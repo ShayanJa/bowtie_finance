@@ -4,12 +4,14 @@ import {
   USDC_ADDRESS,
   RIBBON_VAULT_COVEREDCALL_ADDRESS,
   VAULT_ADDRESS,
+  STAKING_ADDRESS,
 } from "../constants";
 
 import {
   TestUSDCoin__factory,
   RibbonThetaVault__factory,
   Vault__factory,
+  StakingRewards__factory,
 } from "../contracts/generated";
 import { constants } from "ethers";
 
@@ -37,5 +39,12 @@ export const useVaultContract = () => {
   const { provider, chainId } = useActiveWeb3();
   return useMemo(() => {
     return Vault__factory.connect(VAULT_ADDRESS[chainId], provider);
+  }, [provider, chainId]);
+};
+
+export const useStakingContract = () => {
+  const { provider, chainId } = useActiveWeb3();
+  return useMemo(() => {
+    return StakingRewards__factory.connect(STAKING_ADDRESS[chainId], provider);
   }, [provider, chainId]);
 };
