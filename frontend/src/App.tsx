@@ -8,21 +8,21 @@ import About from "./views/About";
 import NotFound from "./views/NotFound";
 import Deposit from "./views/Deposit";
 import Withdraw from "./views/Withdraw";
-import Borrow from "./views/Borrow";
+import BorrowPaybackPage from "./views/BorrowPaybackPage";
+import DepositWithdrawPage from './views/DepositBorrowPage'
 import { useSubscribe } from "./state/application/hooks";
 
 const App = () => {
   useSubscribe();
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900">
       <Router>
         <Nav />
         <Switch>
           <Route exact path="/" component={About} />
           <Route path="/portfolio" component={Home} />
-          <Route path="/deposit" component={Deposit} />
-          <Route path="/withdraw" component={Withdraw} />
-          <Route path="/borrow" component={Borrow} />
+          <Route path="/deposit" component={DepositWithdrawPage} />
+          <Route path="/borrow" component={BorrowPaybackPage} />
           <Route>
             <NotFound />
           </Route>

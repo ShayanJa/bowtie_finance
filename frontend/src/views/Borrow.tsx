@@ -24,7 +24,7 @@ const Borrow = () => {
   });
   return (
     <>
-      <Header title="Borrow" />
+       <h3 className="mt-10 text-xl leading-6 font-medium text-white">Borrow</h3>
       <main>
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8 bg-blend-multiply">
           <div className="px-4 py-6 sm:px-0">

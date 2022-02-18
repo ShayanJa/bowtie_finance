@@ -2,13 +2,18 @@ import React from "react";
 import Header from "../components/Header";
 
 const Withdraw = () => {
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    console.log('You clicked submit.');
+  }
   return (
     <>
-      <Header title="Withdraw" />
+      <h2 className="mt-10 text-xl leading-6 font-medium text-white">Withdraw</h2>
       <main>
         <div className="max-w-4xl mx-auto py-4 sm:px-6 lg:px-8 bg-blend-multiply">
           <div className="px-4 py-6 sm:px-0">
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="overflow-hidden rounded-3xl">
                 <div className="px-4 py-6 bg-gray-800 sm:p-6">
                   <div className="grid grid-cols-6 gap-6">
