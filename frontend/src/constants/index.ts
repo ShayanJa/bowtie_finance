@@ -7,11 +7,18 @@ export enum ChainId {
   FUJI = 43113,
 }
 
-export const USDC_ADDRESS: { [chainId in ChainId]: string } = {
-  [ChainId.NOT_CONNECTED]: "0x9a7317071fab80ab63ED97128705F81B185BAB37",
-  [ChainId.DEVELOPMENT]: "0x9a7317071fab80ab63ED97128705F81B185BAB37",
-  [ChainId.AVAX]: "0x9a7317071fab80ab63ED97128705F81B185BAB37",
+export const ORACLE_ADDRESS: { [chainId in ChainId]: string } = {
+  [ChainId.NOT_CONNECTED]: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+  [ChainId.DEVELOPMENT]: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+  [ChainId.AVAX]: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
   [ChainId.FUJI]: "",
+};
+
+export const USDB_ADDRESS: { [chainId in ChainId]: string } = {
+  [ChainId.NOT_CONNECTED]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
+  [ChainId.DEVELOPMENT]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
+  [ChainId.AVAX]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
+  [ChainId.FUJI]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
 };
 
 export const CURVE_POOL_ADDRESS: { [chainId in ChainId]: string } = {
@@ -37,7 +44,8 @@ export const COLLATERAL_ADDRESS: { [chainId in ChainId]: string } = {
 
 export const VAULT_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.NOT_CONNECTED]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
-  [ChainId.DEVELOPMENT]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
+  // [ChainId.DEVELOPMENT]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A", //test-deploy
+  [ChainId.DEVELOPMENT]: "0x26301F4CA0d63f518e394919B12C76601dfDD5b8", // mainnet-fork
   [ChainId.AVAX]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
   [ChainId.FUJI]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
 };

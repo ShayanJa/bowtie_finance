@@ -29,4 +29,8 @@ contract SubVault is Ownable {
     return  accValue.add(uint256(amount));
   }
   
+  function withdraw(uint256 amount) public {
+    stratVault.initiateWithdraw(amount);
+  }
+  
 }

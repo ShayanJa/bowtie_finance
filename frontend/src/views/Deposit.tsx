@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { useActiveWeb3 } from "../state/application/hooks";
 import { useVault } from "../hooks/vault";
+import { useOracle } from "../hooks/oracle";
 
 const Deposit = () => {
   const [allowance, approve, deposit] = useVault();
+  const [getPrice] = useOracle();
   const [amount, setAmount] = useState("0");
+  const [price, setPrice] = useState("0");
   const { balance } = useActiveWeb3();
 
   const handleInput = (event: any) => {
@@ -24,6 +27,8 @@ const Deposit = () => {
     const setup = async () => {
       const allowed = await allowance();
       setIsAllowed(allowed);
+      const newPrice = await getPrice();
+      setPrice(newPrice);
     };
     setup();
   });
@@ -46,7 +51,7 @@ const Deposit = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Amount: {balance}
+                        Amount: {balance} Price: ${price}
                       </label>
                       <input
                         id="token"
