@@ -13,18 +13,23 @@ async function main() {
   const Oracle = await ethers.getContractFactory("MockOracle");
   const oracle = await Oracle.deploy(initialPrice);
 
+  const WETH = await ethers.getContractFactory("WETH9");
+  const weth = await WETH.deploy();
+
   const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
-  const ribbonVault = await RibbonVault.deploy();
-  await ribbonVault.mint(sender.address, initialAmount);
+  const ribbonVault = await RibbonVault.deploy(weth.address);
+  // await ribbonVault.mint(sender.address, initialAmount);
 
   const RUSD = await ethers.getContractFactory("MockUSD");
   const rUsd = await RUSD.deploy();
 
   const Vault = await ethers.getContractFactory("Vault");
   const vault = await Vault.deploy(
-    ribbonVault.address,
+    weth.address,
     rUsd.address,
-    oracle.address
+    oracle.address,
+    ribbonVault.address,
+    weth.address
   );
 
   await vault.deployed();

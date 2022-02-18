@@ -157,5 +157,5 @@ export const useSubscribe = () => {
       };
     }
     return undefined;
-  }, [chainId, address]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [chainId, address]); // eslint-disable-line
 };

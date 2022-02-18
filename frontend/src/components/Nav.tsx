@@ -50,7 +50,7 @@ const Nav = () => {
 
             <div className="flex-shrink-0 order-last">
               <button
-                type="submit"
+                // type="submit"
                 onClick={!address ? connectWallet : disconnectWallet}
                 className="inline-flex justify-center ml-5 py-2 px-6 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
