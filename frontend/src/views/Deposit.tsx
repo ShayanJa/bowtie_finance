@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
-import { useRibbon } from "../hooks/ribbon";
+import { useActiveWeb3 } from "../state/application/hooks";
 
 const Deposit = () => {
-  const [getDeposits] = useRibbon();
-  const [balance, setBalance] = useState("0");
-  useEffect(() => {
-    const setup = async () => {
-      const [, , total] = await getDeposits();
-      setBalance(total);
-    };
-    setup();
-  });
+  // const [getDeposits] = useRibbon();
+  // const [balance, setBalance] = useState("0");
+  // useEffect(() => {
+  //   const setup = async () => {
+  //     const [, , total] = await getDeposits();
+  //     setBalance(total);
+  //   };
+  //   setup();
+  // });
+  const { balance } = useActiveWeb3();
   return (
     <>
       <Header title="Deposit" />
@@ -27,7 +28,7 @@ const Deposit = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Amount:{balance}
+                        Amount: {balance}
                       </label>
                       <input
                         id="token"
@@ -50,7 +51,7 @@ const Deposit = () => {
                         autoComplete="token-name"
                         className="h-14 mt-1 block text-white text-xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option>ETH</option>
+                        <option>AVAX</option>
                         <option>BTC</option>
                         <option>ONE</option>
                       </select>

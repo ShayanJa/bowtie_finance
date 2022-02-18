@@ -1,10 +1,15 @@
 import { useMemo } from "react";
 import { useActiveWeb3 } from "../state/application/hooks";
-import { USDC_ADDRESS, RIBBON_VAULT_COVEREDCALL_ADDRESS } from "../constants";
+import {
+  USDC_ADDRESS,
+  RIBBON_VAULT_COVEREDCALL_ADDRESS,
+  VAULT_ADDRESS,
+} from "../constants";
 
 import {
   TestUSDCoin__factory,
   RibbonThetaVault__factory,
+  Vault__factory,
 } from "../contracts/generated";
 import { constants } from "ethers";
 
@@ -25,5 +30,12 @@ export const useRibbonVaultContract = () => {
       RIBBON_VAULT_COVEREDCALL_ADDRESS[chainId],
       provider
     );
+  }, [provider, chainId]);
+};
+
+export const useVaultContract = () => {
+  const { provider, chainId } = useActiveWeb3();
+  return useMemo(() => {
+    return Vault__factory.connect(VAULT_ADDRESS[chainId], provider);
   }, [provider, chainId]);
 };
