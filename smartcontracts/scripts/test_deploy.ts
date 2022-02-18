@@ -8,7 +8,6 @@ import { ethers } from "hardhat";
 async function main() {
   const [sender, ...senders] = await ethers.getSigners();
   const initialPrice = 371750669620572;
-  const initialAmount = 1e8;
 
   const Oracle = await ethers.getContractFactory("MockOracle");
   const oracle = await Oracle.deploy(initialPrice);

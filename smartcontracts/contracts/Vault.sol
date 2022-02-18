@@ -26,7 +26,7 @@ contract Vault is Ownable {
     mapping(address => uint256) public sharesOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
-    mapping(address => SubVault) private subVaults;
+    mapping(address => address) private subVaults;
 
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
@@ -62,10 +62,13 @@ contract Vault is Ownable {
     
     function _deposit(uint256 amount) internal {
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
-        SubVault vault = new SubVault(address(collateral), address(stratVault));
-        subVaults[msg.sender] = vault;
+        address vault = subVaults[msg.sender];
+        if(vault == address(0)) {
+            vault = address(new SubVault(address(collateral), address(stratVault)));
+            subVaults[msg.sender] = vault;
+        }
         collateral.approve(address(vault), amount);
-        vault.deposit(amount);
+        SubVault(vault).deposit(amount);
     }
   
     function withdraw(uint256 amount) public {
@@ -123,7 +126,7 @@ contract Vault is Ownable {
     }
 
     function maximumBorrowAmount(address user) public view returns (uint256) {
-        uint256 val = subVaults[user].getValueInUnderlying();
+        uint256 val = SubVault(subVaults[user]).getValueInUnderlying();
         return
             getValueOfCollateral(val)
                 .mul(COLATERALIZATION_FACTOR)
@@ -147,11 +150,10 @@ contract Vault is Ownable {
     }
 
     function liquidate(address user) public returns (bool) {
-        require(getValueOfCollateral(subVaults[user].getValueInUnderlying()) < borrowed[user]);
+        require(getValueOfCollateral(SubVault(subVaults[user]).getValueInUnderlying()) < borrowed[user]);
         uint256 fee = balanceOf[user].mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        
         
         balanceOf[msg.sender] = balanceOf[msg.sender].add(fee);
         balanceOf[user] = 0;

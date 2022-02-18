@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../assets/bowtielogo.png";
 import { useActiveWeb3, useWeb3Modal } from "../state/application/hooks";
+import { ethAddressSubstring } from "../utils";
 
 const Nav = () => {
   const [connectWallet, disconnectWallet] = useWeb3Modal();
@@ -54,7 +55,7 @@ const Nav = () => {
                 onClick={!address ? connectWallet : disconnectWallet}
                 className="inline-flex justify-center ml-5 py-2 px-6 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                {address ? address : "Connect Wallet"}
+                {address ? ethAddressSubstring(address) : "Connect Wallet"}
               </button>
             </div>
           </div>
