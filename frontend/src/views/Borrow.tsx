@@ -7,7 +7,6 @@ const Borrow = () => {
   const [allowance, approve, , borrow, maxBorrow] = useVault();
   const [amount, setAmount] = useState("0");
   const [maxAmount, setMaxAmount] = useState("0");
-  const { balance } = useActiveWeb3();
 
   const handleInput = (event: any) => {
     setAmount(event.target.value);
