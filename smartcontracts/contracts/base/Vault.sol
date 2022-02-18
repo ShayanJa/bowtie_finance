@@ -1,74 +1,58 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
+import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
+import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
+import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-// import {
-//     ReentrancyGuardUpgradeable
-// } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {IWETH} from "./interfaces/IWETH.sol";
 
-contract Vault is Ownable {
+abstract contract BaseVault is Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public oracle;
     IERC20Mintable public usdB;
     IERC20 public collateral;
-    IRibbonThetaVault public stratVault;
-    IERC20Mintable public rewardToken;
+    IStakingRewards public stakingRewards;
+    
     mapping(address => uint256) public balancesOf;
-    mapping(address => uint256) public sharesOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
     
-    uint256 public totalSharesOwned = 0;
-
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
     uint256 public constant COLATERALIZATION_FACTOR = 9500;
     uint256 public constant FEE_DECIMALS = 4;
-    address public immutable WETH;
 
     constructor(
         address _collateral,
         address _usdB,
         address _oracle,
-        address _WETH
+        address _stakingRewards
     ) {
-        collateral = IRibbonThetaVault(_collateral);
+        collateral = IERC20(_collateral);
         usdB = IERC20Mintable(_usdB);
         oracle = AggregatorV3Interface(_oracle);
-        WETH = _WETH;
+        stakingRewards = IStakingRewards(_stakingRewards);
     }
 
     function deposit(uint256 amount) public {
         collateral.transferFrom(msg.sender, address(this), amount);
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount);
+        uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
+        collateral.transfer(address(stakingRewards), fee);
+        stakingRewards.notifyRewardAmount(fee);
+        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount.sub(fee));
     }
-    
-    function depositETH() public payable{
-        require(msg.value > 0, "!value");
-        IWETH(WETH).deposit{value: msg.value}();
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(msg.value);
 
-        stratVault.depositFor(msg.value, address(this));
-        uint256 shares = stratVault.shares(address(this));
-        totalSharesOwned = totalSharesOwned.add(shares);
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(msg.value);
-        sharesOf[msg.sender] = sharesOf[msg.sender].add(shares);
-    }
-  
     function withdraw(uint256 amount) public {
         require(
             amount <= balancesOf[msg.sender],
             "Must be less than deposited"
         );
         balancesOf[msg.sender] = balancesOf[msg.sender].sub(amount);
-        // stratVault.deposit(msg.sender, amount);
+        collateral.transfer(msg.sender, amount);
     }
 
     function borrow(uint256 amount) public {
@@ -123,19 +107,7 @@ contract Vault is Ownable {
                 .div(FEE_DECIMALS);
     }
 
-    function getValueOfCollateral(uint256 amount)
-        public
-        view
-        returns (uint256)
-    {
-        return
-            amount
-                .mul(stratVault.pricePerShare())
-                // .div(10**collateral.decimals())
-                .div(10**18)
-                .mul(getLatestPrice())
-                .div(10**oracle.decimals());
-    }
+    function getValueOfCollateral(uint256 amount) virtual public view returns (uint256);
 
     function getLatestPrice() public view returns (uint256) {
         (, int256 price, , , ) = oracle.latestRoundData();

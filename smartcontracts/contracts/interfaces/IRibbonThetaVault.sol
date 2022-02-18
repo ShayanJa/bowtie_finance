@@ -18,13 +18,14 @@ interface IRibbonThetaVault is IERC20 {
     
     function deposit(uint256 amount) external;
     
-    function depositFor(uint256 amount, address creditor)external;
+    function depositFor(uint256 amount, address creditor) external;
     
     function initiateWithdraw(uint256 numShares) external;
     
     function shares(address account) external view returns (uint256);
     
     function depositReceipts(address) external view returns (uint16, uint104, uint128);
-
+    
+    function accountValueBalance(address) external view returns (uint256);
 }
 
