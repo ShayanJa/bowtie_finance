@@ -9,8 +9,16 @@ const Deposit = () => {
   const { balance } = useActiveWeb3();
 
   const handleInput = (event: any) => {
+    event.preventDefault();
     setAmount(event.target.value);
   };
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    if(isAllowed){
+      async () => await deposit(amount)
+    }
+      async () => await approve()
+  }
   const [isAllowed, setIsAllowed] = useState(false);
   useEffect(() => {
     const setup = async () => {
@@ -21,11 +29,15 @@ const Deposit = () => {
   });
   return (
     <>
-      <Header title="Deposit" />
+      <h2 className="mt-10 text-xl leading-6 font-medium text-white">Deposit</h2>
       <main>
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8 bg-blend-multiply">
+        <div>
+      
+    </div>
+
           <div className="px-4 py-6 sm:px-0">
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="overflow-hidden rounded-3xl">
                 <div className="px-4 py-5 bg-gray-800 sm:p-6">
                   <div className="grid grid-cols-6 gap-6">
@@ -64,16 +76,12 @@ const Deposit = () => {
                       </select>
                     </div>
                   </div>
-                  <div
-                    onClick={
-                      isAllowed
-                        ? async () => await deposit(amount)
-                        : async () => await approve()
-                    }
+                  <button
+                  type="submit"
                     className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     {isAllowed ? "Deposit" : "Approve"}
-                  </div>
+                  </button>
                 </div>
               </div>
             </form>

@@ -11,24 +11,26 @@ const Nav = () => {
   const location = useLocation();
 
   const links = [
-    { text: "Home", to: "/" },
     { text: "Deposit", to: "/deposit" },
-    { text: "Withdraw", to: "/withdraw" },
     { text: "Borrow", to: "/borrow" },
-    { text: "Payback", to: "/payback" },
-    { text: "Portfolio", to: "/portfolio" },
-  ];
+    { text: "Farm", to: "/farm" },
+  ]; 
 
   const activeClass = "text-white bg-gray-900";
   const inactiveClass = "text-gray-300 hover:text-white hover:bg-gray-700";
 
   return (
-    <nav className="">
+    <nav className="mt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <img className="h-8 w-full" src={Logo} alt="logo" />
+            <Link
+            to="/"
+            >
+              <img className="h-8 w-full" src={Logo} alt="logo"/>
+            </Link>
+              
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
