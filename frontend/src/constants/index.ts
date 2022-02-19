@@ -11,9 +11,9 @@ export enum ChainId {
 export const ORACLE_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.NOT_CONNECTED]: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
   [ChainId.DEVELOPMENT]: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
-  [ChainId.AVAX]: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+  [ChainId.AVAX]: "0x0A77230d17318075983913bC2145DB16C7366156",
   [ChainId.FUJI]: "",
-  [ChainId.ONE]: "",
+  [ChainId.ONE]: "0xdCD81FbbD6c4572A69a534D8b8152c562dA8AbEF",
 };
 
 export const USDB_ADDRESS: { [chainId in ChainId]: string } = {
