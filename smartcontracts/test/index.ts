@@ -8,6 +8,7 @@ import {
   MockUSD,
   WETH9,
   Vault,
+  SubVault,
 } from "../typechain";
 
 describe("Vault", function () {
@@ -17,7 +18,6 @@ describe("Vault", function () {
   let rUsd: MockUSD;
   let weth: WETH9;
   let vault: Vault;
-  let collateralValue: number;
   let initSnapshotId: string;
 
   let initialDeposit: BigNumber;
@@ -56,8 +56,9 @@ describe("Vault", function () {
     initSnapshotId = await takeSnapshot();
     await weth.approve(vault.address, initialDeposit);
     await vault.depositETH({ value: initialDeposit });
-    expect(await vault.balanceOf(sender.address)).to.be.eq(initialDeposit);
     expect(await weth.balanceOf(vault.address)).to.be.eq(0);
+    expect(await weth.balanceOf(vault.address)).to.be.eq(0);
+
     revertToSnapShot(initSnapshotId);
   });
   it("Should mint tokens", async function () {
@@ -80,6 +81,7 @@ describe("Vault", function () {
   });
   it("should revert: Can't borrow total colalteral amount", async function () {
     initSnapshotId = await takeSnapshot();
+    console.log("hey");
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     console.log(maxAmount);
     await expect(vault.borrow(maxAmount)).to.be.revertedWith(
@@ -103,6 +105,33 @@ describe("Vault", function () {
   it("should not allow liquidation under the max amount", async function () {
     await expect(vault.liquidate(sender.address)).to.be.reverted;
   });
+  describe("Sub Vault", () => {
+    let subVault: SubVault;
+    before(async function () {
+      const subVaultAddress = await vault.subVaults(sender.address);
+      subVault = await ethers.getContractAt("SubVault", subVaultAddress);
+    });
+
+    it("should have vault as owner", async () => {
+      expect(await subVault.owner()).to.be.eq(vault.address);
+    });
+    it("should revert: only owner allowed to withdraw tokeens", async function () {
+      const collateral = await subVault.collateral();
+      const amount = 100;
+      await expect(subVault.withdrawTokens(collateral, amount)).to.be.reverted;
+    });
+    it("owner vault can withdraw tokens from subVault ", async function () {
+      const collateral = await subVault.collateral();
+      const amount = 100;
+      await vault.withdrawTokens(collateral, amount);
+    });
+    // it("should revert: only msg.sender and liquidator can access subVault", async function () {
+    //   const collateral = await subVault.collateral();
+    //   const amount = 100;
+    //   await expect(subVault.withdrawTokens(collateral, amount)).to.be.reverted;
+    // });
+  });
+
   it("should pay back tokens", async function () {
     const depositAmount = 1e8;
     await vault.repay(depositAmount);
@@ -131,7 +160,7 @@ describe("UsdB", function () {
   let sender: SignerWithAddress;
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
-  let rUsd: MockUSD;
+  let usdb: MockUSD;
   let vault: Vault;
   let weth: WETH9;
 
@@ -148,25 +177,28 @@ describe("UsdB", function () {
     const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
     ribbonVault = await RibbonVault.deploy(weth.address);
 
-    const RUSD = await ethers.getContractFactory("MockUSD");
-    rUsd = await RUSD.deploy();
+    const USDB = await ethers.getContractFactory("MockUSD");
+    usdb = await USDB.deploy();
 
     const Vault = await ethers.getContractFactory("Vault");
     vault = await Vault.deploy(
       weth.address,
-      rUsd.address,
+      usdb.address,
       oracle.address,
       ribbonVault.address,
       weth.address
     );
   });
   it("should transfer ownership", async function () {
-    await rUsd.transferOwnership(vault.address);
+    await usdb.transferOwnership(vault.address);
   });
 
   it("should be owned by the vault", async function () {
-    const owner = await rUsd.owner();
+    const owner = await usdb.owner();
     expect(owner).to.be.eq(vault.address);
+  });
+  it("should revert: can only be minted by vault", async function () {
+    await expect(usdb.mint(sender.address, 100)).to.be.reverted;
   });
 });
 

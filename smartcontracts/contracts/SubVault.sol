@@ -17,7 +17,7 @@ contract SubVault is Ownable {
     stratVault = IRibbonThetaVault(_stratVault);
   }
   
-  function deposit(uint256 amount) public {
+  function deposit(uint256 amount) public onlyOwner{
     collateral.transferFrom(msg.sender, address(this), amount);
     collateral.approve(address(stratVault), amount);
     stratVault.deposit(amount);
@@ -25,12 +25,22 @@ contract SubVault is Ownable {
   
   function getValueInUnderlying() public view returns (uint256){
     (,uint104 amount,) = stratVault.depositReceipts(address(this));
-    uint256 accValue = stratVault.accountValueBalance(address(this));
+    uint256 accValue = stratVault.accountVaultBalance(address(this));
     return  accValue.add(uint256(amount));
   }
   
-  function withdraw(uint256 amount) public {
+  function getLiquidValueInUnderlying(address subVault) public onlyOwner returns (uint256) {
+    (,uint104 amount,uint128 unredeemedShares) = stratVault.depositReceipts(address(this));
+    return uint256(amount).add(uint256(unredeemedShares));
+  }
+  
+  function initiateWithdraw(uint256 amount) public onlyOwner {
     stratVault.initiateWithdraw(amount);
   }
+  
+  function withdrawTokens(address token, uint256 amount) public onlyOwner{
+    IERC20(token).transfer(owner(), amount);
+  }
+  
   
 }
