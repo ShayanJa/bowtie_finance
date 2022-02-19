@@ -20,7 +20,7 @@ contract Vault is Ownable {
     IRibbonThetaVault public stratVault;
     
     mapping(address => bool) public allowedStables;
-    // mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) public balanceOf;
     mapping(address => uint256) public borrowed;
     mapping(address => SubVault) public subVaults;
     mapping(address => uint256) public owedLiquidations;
@@ -54,6 +54,7 @@ contract Vault is Ownable {
     function depositETH() public payable{
         require(msg.value > 0, "!value");
         IWETH(WETH).deposit{value: msg.value}();
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(msg.value);
         _deposit(msg.value);
     }
     
@@ -69,6 +70,7 @@ contract Vault is Ownable {
             vault = new SubVault(address(collateral), address(stratVault));
             subVaults[msg.sender] = vault;
         }
+        collateral.approve(address(stratVault), amount);
         stratVault.depositFor(amount, address(vault));
     }
     
