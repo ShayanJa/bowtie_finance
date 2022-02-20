@@ -118,11 +118,11 @@ contract BaseVault is Ownable {
         return
             getValueOfCollateral(balanceOf[user])
                 .mul(COLATERALIZATION_FACTOR)
-                .div(FEE_DECIMALS);
+                .div(10**FEE_DECIMALS);
     }
 
     function getValueOfCollateral(uint256 amount) public view returns (uint256) {
-        return amount.mul(getLatestPrice()).div(oracle.decimals());
+        return amount.mul(getLatestPrice()).div(10**oracle.decimals());
     }
 
     function getLatestPrice() public view returns (uint256) {

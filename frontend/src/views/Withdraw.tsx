@@ -2,14 +2,15 @@ import React from "react";
 import Header from "../components/Header";
 
 const Withdraw = () => {
-
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    console.log('You clicked submit.');
-  }
+    console.log("You clicked submit.");
+  };
   return (
     <>
-      <h2 className="mt-10 text-xl leading-6 font-medium text-white">Withdraw</h2>
+      <h2 className="mt-10 text-xl leading-6 font-medium text-white">
+        Withdraw
+      </h2>
       <main>
         <div className="max-w-4xl mx-auto py-4 sm:px-6 lg:px-8 bg-blend-multiply">
           <div className="px-4 py-6 sm:px-0">
@@ -46,8 +47,8 @@ const Withdraw = () => {
                         className="h-14 mt-1 block text-white text-xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option>ETH</option>
-                        <option>BTC</option>
-                        <option>ONE</option>
+                        {/* <option>BTC</option> */}
+                        {/* <option>ONE</option> */}
                       </select>
                     </div>
                   </div>

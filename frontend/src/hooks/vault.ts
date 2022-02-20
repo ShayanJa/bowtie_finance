@@ -11,6 +11,8 @@ export const useVault = (): [
   () => Promise<void>,
   (amount: string) => Promise<void>,
   (amount: string) => Promise<void>,
+  () => Promise<string>,
+  () => Promise<string>,
   () => Promise<string>
 ] => {
   const vault = useVaultContract();
@@ -18,10 +20,7 @@ export const useVault = (): [
 
   const balance = useCallback(async () => {
     try {
-      console.log("here");
-      console.log(address);
       const bal = await vault.balanceOf(address);
-      console.log(bal);
       return utils.formatEther(bal);
     } catch (e) {
       console.log(e);
@@ -105,6 +104,36 @@ export const useVault = (): [
       return "0";
     }
   }, [vault, address]);
+  const getValueOfCollateral = useCallback(async () => {
+    try {
+      console.log((await vault.getLatestPrice()).toString());
+      const bal = await vault.balanceOf(address);
+      const val = await vault.getValueOfCollateral(bal);
+      return utils.formatEther(val);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
 
-  return [balance, allowance, approve, deposit, borrow, maxiumBorrow];
+  const borrowed = useCallback(async () => {
+    try {
+      const bal = await vault.borrowed(address);
+      return utils.formatEther(bal);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
+
+  return [
+    balance,
+    allowance,
+    approve,
+    deposit,
+    borrow,
+    maxiumBorrow,
+    getValueOfCollateral,
+    borrowed,
+  ];
 };

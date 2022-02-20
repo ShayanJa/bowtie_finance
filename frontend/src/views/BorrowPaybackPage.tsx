@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Borrow from "./Borrow";
 import { useVault } from "../hooks/vault";
 
 const BorrowPaybackPage = () => {
+  const [getBalance, , , , , maxiumBorrow, getValueOfCollateral, getBorrowed] =
+    useVault();
+  const [balance, setBalance] = useState("0");
+  const [value, setValue] = useState("0");
+  const [borrowedAmount, setborrowedAmount] = useState("0");
+
+  useEffect(() => {
+    const setup = async () => {
+      setBalance(await getBalance());
+      setValue(await getValueOfCollateral());
+      setborrowedAmount(await getBorrowed());
+    };
+    setup();
+  }, []);
   return (
     <>
       <main>
@@ -14,10 +28,10 @@ const BorrowPaybackPage = () => {
           <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
               <dt className="text-lg font-medium text-white truncate">
-                Balance
+                Deposited
               </dt>
               <dd className="mt-1 text-2xl font-semibold text-white">
-                2.45453 AVAX
+                {balance || "0"} ETH
               </dd>
             </div>
             <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
@@ -25,15 +39,15 @@ const BorrowPaybackPage = () => {
                 Borrowed
               </dt>
               <dd className="mt-1 text-2xl font-semibold text-white">
-                1.43242421 AVAX
+                {borrowedAmount} USDB
               </dd>
             </div>
             <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
               <dt className="text-lg font-medium text-white truncate">
-                Staked
+                Collateral Ratio
               </dt>
               <dd className="mt-1 text-2xl font-semibold text-white">
-                1.43242421 AVAX
+                185.714%
               </dd>
             </div>
           </dl>

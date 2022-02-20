@@ -4,12 +4,13 @@ import Withdraw from "./Withdraw";
 import { useVault } from "../hooks/vault";
 
 const DepositWithdrawPage = () => {
-  const [getBalance] = useVault();
+  const [getBalance, , , , , maxiumBorrow, getValueOfCollateral] = useVault();
   const [balance, setBalance] = useState("0");
+  const [value, setValue] = useState("0");
   useEffect(() => {
     const setup = async () => {
-      const bal = await getBalance();
-      setBalance(bal);
+      setBalance(await getBalance());
+      setValue(await getValueOfCollateral());
     };
     setup();
   }, []);
@@ -22,7 +23,7 @@ const DepositWithdrawPage = () => {
             <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
               <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
                 <dt className="text-lg font-medium text-white truncate">
-                  Balance
+                  Deposited
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
                   {balance || "0"} ETH
@@ -30,10 +31,10 @@ const DepositWithdrawPage = () => {
               </div>
               <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
                 <dt className="text-lg font-medium text-white truncate">
-                  Staked
+                  Earning
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  1.43242421 ETH
+                  18.3 %
                 </dd>
               </div>
               <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
@@ -41,7 +42,7 @@ const DepositWithdrawPage = () => {
                   Available to Withdraw
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  1.43242421 ETH
+                  0.3 ETH
                 </dd>
               </div>
             </dl>

@@ -77,8 +77,8 @@ const Deposit = () => {
                         className="h-14 mt-1 block text-white text-xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         <option>ETH</option>
-                        <option>BTC</option>
-                        <option>ONE</option>
+                        {/* <option>BTC</option>
+                        <option>ONE</option> */}
                       </select>
                     </div>
                   </div>

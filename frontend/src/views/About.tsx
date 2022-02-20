@@ -12,7 +12,7 @@ const About = () => {
                 <h2 className="text-6xl font-extrabold text-white sm:text-5xl sm:leading-none md:text-6xl">
                   Options Backed Stablecoins
                 </h2>
-                <p className="py-6 text-slate-50 sm:mt-5 sm:text-2xl sm:max-w-xl sm:mx-auto md:mt-5 md:text-2xl lg:mx-0">
+                <p className="py-6 text-slate-50 sm:mt-5 sm:text-2xl sm:max-w-xl sm:mx-auto md:mt-5 md:text-2xl lg:mx-0 text-white">
                   As capital becomes more fluid, any asset can be used as
                   collateral. Users in Defi have unlocked liquidity by borrowing
                   against spot, interest-bearing, fixed income, and market
