@@ -5,11 +5,11 @@ import { useVault } from "../hooks/vault";
 import { useOracle } from "../hooks/oracle";
 
 const Deposit = () => {
-  const [allowance, approve, deposit] = useVault();
+  const [balance, allowance, approve, deposit] = useVault();
   const [getPrice] = useOracle();
   const [amount, setAmount] = useState("0");
   const [price, setPrice] = useState("0");
-  const { balance } = useActiveWeb3();
+  const { balance: ethBalance } = useActiveWeb3();
 
   const handleInput = (event: any) => {
     event.preventDefault();
@@ -17,15 +17,16 @@ const Deposit = () => {
   };
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    if(isAllowed){
-      async () => await deposit(amount)
+    if (isAllowed) {
+      async () => await deposit(amount);
     }
-      async () => await approve()
-  }
+    async () => await approve();
+  };
   const [isAllowed, setIsAllowed] = useState(false);
   useEffect(() => {
     const setup = async () => {
       const allowed = await allowance();
+      console.log(allowed);
       setIsAllowed(allowed);
       const newPrice = await getPrice();
       setPrice(newPrice);
@@ -34,12 +35,12 @@ const Deposit = () => {
   });
   return (
     <>
-      <h2 className="mt-10 text-xl leading-6 font-medium text-white">Deposit</h2>
+      <h2 className="mt-10 text-xl leading-6 font-medium text-white">
+        Deposit
+      </h2>
       <main>
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8 bg-blend-multiply">
-        <div>
-      
-    </div>
+          <div></div>
 
           <div className="px-4 py-6 sm:px-0">
             <form onSubmit={handleSubmit}>
@@ -51,7 +52,7 @@ const Deposit = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Amount: {balance} Price: ${price}
+                        Amount: {ethBalance} Price: ${price}
                       </label>
                       <input
                         id="token"
@@ -75,9 +76,9 @@ const Deposit = () => {
                         autoComplete="token-name"
                         className="h-14 mt-1 block text-white text-xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option>AVAX</option>
-                        <option>BTC</option>
-                        <option>ONE</option>
+                        <option>ETH</option>
+                        {/* <option>BTC</option>
+                        <option>ONE</option> */}
                       </select>
                     </div>
                   </div>

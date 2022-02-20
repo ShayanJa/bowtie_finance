@@ -4,7 +4,7 @@ import { useActiveWeb3 } from "../state/application/hooks";
 import { useVault } from "../hooks/vault";
 
 const Borrow = () => {
-  const [allowance, approve, , borrow, maxBorrow] = useVault();
+  const [bal, allowance, approve, , borrow, maxBorrow, borrowed] = useVault();
   const [amount, setAmount] = useState("0");
   const [maxAmount, setMaxAmount] = useState("0");
 
@@ -36,7 +36,7 @@ const Borrow = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Max Borrow: {maxAmount}
+                        Max Borrow: ${maxAmount}
                       </label>
                       <input
                         id="token"
@@ -60,9 +60,9 @@ const Borrow = () => {
                         autoComplete="token-name"
                         className="h-14 mt-1 block text-white text-xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option>ETH</option>
-                        <option>BTC</option>
-                        <option>ONE</option>
+                        <option>USDB</option>
+                        {/* <option>BTC</option>
+                        <option>ONE</option> */}
                       </select>
                     </div>
                   </div>

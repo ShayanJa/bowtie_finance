@@ -3,16 +3,30 @@ import { useActiveWeb3 } from "../state/application/hooks";
 import { useVaultContract } from "./contracts";
 import { ethers, utils } from "ethers";
 import { TestUSDCoin__factory } from "../contracts/generated";
+import toast from "react-hot-toast";
 
 export const useVault = (): [
+  () => Promise<string>,
   () => Promise<boolean>,
   () => Promise<void>,
   (amount: string) => Promise<void>,
   (amount: string) => Promise<void>,
+  () => Promise<string>,
+  () => Promise<string>,
   () => Promise<string>
 ] => {
   const vault = useVaultContract();
   const { address, provider } = useActiveWeb3();
+
+  const balance = useCallback(async () => {
+    try {
+      const bal = await vault.balanceOf(address);
+      return utils.formatEther(bal);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
 
   const allowance = useCallback(async () => {
     try {
@@ -28,9 +42,21 @@ export const useVault = (): [
 
   const approve = useCallback(async () => {
     try {
-      const collateral = await vault.collateral();
-      const coin = TestUSDCoin__factory.connect(collateral, provider);
-      await coin.approve(vault.address, ethers.constants.MaxUint256);
+      const req = async () => {
+        const collateral = await vault.collateral();
+        const coin = TestUSDCoin__factory.connect(collateral, provider);
+        const tx = await coin.approve(
+          vault.address,
+          ethers.constants.MaxUint256
+        );
+        await tx.wait();
+      };
+
+      await toast.promise(req(), {
+        loading: "Approving...",
+        success: "Approved",
+        error: "Error approving",
+      });
     } catch (e) {
       console.log(e);
     }
@@ -39,8 +65,18 @@ export const useVault = (): [
   const deposit = useCallback(
     async (amount) => {
       try {
-        const tx = await vault.depositETH({ value: utils.parseEther(amount) });
-        await tx.wait();
+        const req = async () => {
+          const tx = await vault.depositETH({
+            value: utils.parseEther(amount),
+          });
+          await tx.wait();
+        };
+
+        await toast.promise(req(), {
+          loading: "Depositing...",
+          success: "Deposited",
+          error: "Error depositing",
+        });
       } catch (e) {
         console.log(e);
       }
@@ -68,6 +104,36 @@ export const useVault = (): [
       return "0";
     }
   }, [vault, address]);
+  const getValueOfCollateral = useCallback(async () => {
+    try {
+      console.log((await vault.getLatestPrice()).toString());
+      const bal = await vault.balanceOf(address);
+      const val = await vault.getValueOfCollateral(bal);
+      return utils.formatEther(val);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
 
-  return [allowance, approve, deposit, borrow, maxiumBorrow];
+  const borrowed = useCallback(async () => {
+    try {
+      const bal = await vault.borrowed(address);
+      return utils.formatEther(bal);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
+
+  return [
+    balance,
+    allowance,
+    approve,
+    deposit,
+    borrow,
+    maxiumBorrow,
+    getValueOfCollateral,
+    borrowed,
+  ];
 };

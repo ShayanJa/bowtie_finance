@@ -7,6 +7,8 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
+
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract BaseVault is Ownable {
@@ -16,8 +18,9 @@ contract BaseVault is Ownable {
     IERC20Mintable public usdB;
     IERC20 public collateral;
     IStakingRewards public stakingRewards;
+    IWETH immutable public WETH;
     
-    mapping(address => uint256) public balancesOf;
+    mapping(address => uint256) public balanceOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
     
@@ -30,28 +33,39 @@ contract BaseVault is Ownable {
         address _collateral,
         address _usdB,
         address _oracle,
-        address _stakingRewards
+        address _stakingRewards,
+        address _weth
     ) {
         collateral = IERC20(_collateral);
         usdB = IERC20Mintable(_usdB);
         oracle = AggregatorV3Interface(_oracle);
         stakingRewards = IStakingRewards(_stakingRewards);
+        WETH = IWETH(_weth);
     }
 
     function deposit(uint256 amount) public {
         collateral.transferFrom(msg.sender, address(this), amount);
+        _deposit(amount);
+    }
+    
+    function depositETH() public payable{
+        require(msg.value > 0, "!value");
+        IWETH(WETH).deposit{value: msg.value}();
+        _deposit(msg.value);
+    }
+    function _deposit(uint256 amount) internal {
         uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
         collateral.transfer(address(stakingRewards), fee);
         stakingRewards.notifyRewardAmount(fee);
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount.sub(fee));
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount.sub(fee));
     }
 
     function withdraw(uint256 amount) public {
         require(
-            amount <= balancesOf[msg.sender],
+            amount <= balanceOf[msg.sender],
             "Must be less than deposited"
         );
-        balancesOf[msg.sender] = balancesOf[msg.sender].sub(amount);
+        balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
         collateral.transfer(msg.sender, amount);
     }
 
@@ -102,13 +116,13 @@ contract BaseVault is Ownable {
 
     function maximumBorrowAmount(address user) public view returns (uint256) {
         return
-            getValueOfCollateral(balancesOf[user])
+            getValueOfCollateral(balanceOf[user])
                 .mul(COLATERALIZATION_FACTOR)
-                .div(FEE_DECIMALS);
+                .div(10**FEE_DECIMALS);
     }
 
     function getValueOfCollateral(uint256 amount) public view returns (uint256) {
-        return amount.mul(getLatestPrice()).div(oracle.decimals());
+        return amount.mul(getLatestPrice()).div(10**oracle.decimals());
     }
 
     function getLatestPrice() public view returns (uint256) {
@@ -117,11 +131,11 @@ contract BaseVault is Ownable {
     }
 
     function liquidate(address user) public returns (bool) {
-        require(getValueOfCollateral(balancesOf[user]) < borrowed[user]);
-        uint256 fee = balancesOf[user].mul(LIQUIDATION_FEE).div(
+        require(getValueOfCollateral(balanceOf[user]) < borrowed[user]);
+        uint256 fee = balanceOf[user].mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(fee);
-        balancesOf[user] = 0;
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(fee);
+        balanceOf[user] = 0;
     }
 }

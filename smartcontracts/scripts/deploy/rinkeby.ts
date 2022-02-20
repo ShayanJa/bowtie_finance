@@ -12,12 +12,8 @@ async function main() {
     "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
   );
 
-  const weth = await ethers.getContractAt(
-    "WETH9",
-    "0xcf664087a5bb0237a0bad6742852ec6c8d69a27a"
-  );
-
-  // await ribbonVault.mint(sender.address, initialAmount);
+  const WETH = await ethers.getContractFactory("WETH9");
+  const weth = await WETH.deploy();
 
   const USDB = await ethers.getContractFactory("UsdB");
   const usdb = await USDB.deploy();
@@ -35,14 +31,18 @@ async function main() {
     weth.address,
     usdb.address,
     oracle.address,
-    staking.address
+    staking.address,
+    weth.address
   );
 
   await vault.deployed();
-
+  await staking.setRewardsDistribution(vault.address);
+  await usdb.transferOwnership(vault.address);
   console.log({
+    weth: weth.address,
     usdb: usdb.address,
     vault: vault.address,
+    staking: staking.address,
   });
 }
 
