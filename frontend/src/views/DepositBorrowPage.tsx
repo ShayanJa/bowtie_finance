@@ -1,8 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Deposit from "./Deposit";
 import Withdraw from "./Withdraw";
+import { useVault } from "../hooks/vault";
 
 const DepositWithdrawPage = () => {
+  const [getBalance] = useVault();
+  const [balance, setBalance] = useState("0");
+  useEffect(() => {
+    const setup = async () => {
+      const bal = await getBalance();
+      setBalance(bal);
+    };
+    setup();
+  }, []);
   return (
     <>
       <main>
@@ -15,7 +25,7 @@ const DepositWithdrawPage = () => {
                   Balance
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  2.45453 AVAX
+                  {balance || "0"} ETH
                 </dd>
               </div>
               <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
@@ -23,7 +33,7 @@ const DepositWithdrawPage = () => {
                   Staked
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  1.43242421 AVAX
+                  1.43242421 ETH
                 </dd>
               </div>
               <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
@@ -31,7 +41,7 @@ const DepositWithdrawPage = () => {
                   Available to Withdraw
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  1.43242421 AVAX
+                  1.43242421 ETH
                 </dd>
               </div>
             </dl>

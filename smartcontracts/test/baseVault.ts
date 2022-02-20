@@ -52,7 +52,7 @@ describe("BaseVault", function () {
   it("should deposit ETH", async function () {
     initSnapshotId = await takeSnapshot();
     await vault.depositETH({ value: initialDeposit });
-    expect(await vault.balancesOf(sender.address)).to.be.eq(
+    expect(await vault.balanceOf(sender.address)).to.be.eq(
       initialDeposit.mul(99).div(100)
     );
     revertToSnapShot(initSnapshotId);
@@ -65,13 +65,13 @@ describe("BaseVault", function () {
   it("should deposit tokens", async function () {
     await weth.approve(vault.address, initialDeposit);
     await vault.deposit(initialDeposit);
-    expect(await vault.balancesOf(sender.address)).to.be.eq(
+    expect(await vault.balanceOf(sender.address)).to.be.eq(
       initialDeposit.mul(99).div(100)
     );
   });
 
   it("should have proper value of colatteral", async function () {
-    const balance = await vault.balancesOf(sender.address);
+    const balance = await vault.balanceOf(sender.address);
     expect(await vault.getValueOfCollateral(balance.toString())).to.eq(
       collateralValue
     );
@@ -107,9 +107,9 @@ describe("BaseVault", function () {
     expect(await usdb.totalSupply()).to.be.eq(0);
   });
   it("should withdraw all tokens", async function () {
-    const amount = await vault.balancesOf(sender.address);
+    const amount = await vault.balanceOf(sender.address);
     await vault.withdraw(amount);
-    expect(await vault.balancesOf(sender.address)).to.be.eq(0);
+    expect(await vault.balanceOf(sender.address)).to.be.eq(0);
   });
   it("should liquidate", async function () {
     const depositAmount = 1e8;
@@ -118,7 +118,7 @@ describe("BaseVault", function () {
     await vault.borrow(maxAmount.sub(1));
     await oracle.setPrice("27703088368");
     await vault.liquidate(sender.address);
-    expect(await vault.balancesOf(sender.address)).to.be.eq(0);
+    expect(await vault.balanceOf(sender.address)).to.be.eq(0);
   });
 });
 

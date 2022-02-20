@@ -6,6 +6,7 @@ import { TestUSDCoin__factory } from "../contracts/generated";
 import toast from "react-hot-toast";
 
 export const useVault = (): [
+  () => Promise<string>,
   () => Promise<boolean>,
   () => Promise<void>,
   (amount: string) => Promise<void>,
@@ -15,18 +16,24 @@ export const useVault = (): [
   const vault = useVaultContract();
   const { address, provider } = useActiveWeb3();
 
+  const balance = useCallback(async () => {
+    try {
+      console.log("here");
+      console.log(address);
+      const bal = await vault.balanceOf(address);
+      console.log(bal);
+      return utils.formatEther(bal);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
+
   const allowance = useCallback(async () => {
     try {
       const collateral = await vault.collateral();
-      console.log(collateral);
-
-      console.log(provider);
       const coin = TestUSDCoin__factory.connect(collateral, provider);
-      console.log("here");
-      console.log(coin);
       const x = await coin.allowance(address, vault.address);
-      console.log(x);
-      console.log("s");
       return x.gt(0);
     } catch (e) {
       console.log(e);
@@ -99,5 +106,5 @@ export const useVault = (): [
     }
   }, [vault, address]);
 
-  return [allowance, approve, deposit, borrow, maxiumBorrow];
+  return [balance, allowance, approve, deposit, borrow, maxiumBorrow];
 };

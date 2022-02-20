@@ -20,7 +20,7 @@ contract BaseVault is Ownable {
     IStakingRewards public stakingRewards;
     IWETH immutable public WETH;
     
-    mapping(address => uint256) public balancesOf;
+    mapping(address => uint256) public balanceOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
     
@@ -57,15 +57,15 @@ contract BaseVault is Ownable {
         uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
         collateral.transfer(address(stakingRewards), fee);
         stakingRewards.notifyRewardAmount(fee);
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(amount.sub(fee));
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount.sub(fee));
     }
 
     function withdraw(uint256 amount) public {
         require(
-            amount <= balancesOf[msg.sender],
+            amount <= balanceOf[msg.sender],
             "Must be less than deposited"
         );
-        balancesOf[msg.sender] = balancesOf[msg.sender].sub(amount);
+        balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
         collateral.transfer(msg.sender, amount);
     }
 
@@ -116,7 +116,7 @@ contract BaseVault is Ownable {
 
     function maximumBorrowAmount(address user) public view returns (uint256) {
         return
-            getValueOfCollateral(balancesOf[user])
+            getValueOfCollateral(balanceOf[user])
                 .mul(COLATERALIZATION_FACTOR)
                 .div(FEE_DECIMALS);
     }
@@ -131,11 +131,11 @@ contract BaseVault is Ownable {
     }
 
     function liquidate(address user) public returns (bool) {
-        require(getValueOfCollateral(balancesOf[user]) < borrowed[user]);
-        uint256 fee = balancesOf[user].mul(LIQUIDATION_FEE).div(
+        require(getValueOfCollateral(balanceOf[user]) < borrowed[user]);
+        uint256 fee = balanceOf[user].mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        balancesOf[msg.sender] = balancesOf[msg.sender].add(fee);
-        balancesOf[user] = 0;
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(fee);
+        balanceOf[user] = 0;
     }
 }

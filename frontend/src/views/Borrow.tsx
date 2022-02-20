@@ -4,7 +4,7 @@ import { useActiveWeb3 } from "../state/application/hooks";
 import { useVault } from "../hooks/vault";
 
 const Borrow = () => {
-  const [allowance, approve, , borrow, maxBorrow] = useVault();
+  const [bal, allowance, approve, , borrow, maxBorrow] = useVault();
   const [amount, setAmount] = useState("0");
   const [maxAmount, setMaxAmount] = useState("0");
 

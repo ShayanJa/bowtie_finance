@@ -5,11 +5,11 @@ import { useVault } from "../hooks/vault";
 import { useOracle } from "../hooks/oracle";
 
 const Deposit = () => {
-  const [allowance, approve, deposit] = useVault();
+  const [balance, allowance, approve, deposit] = useVault();
   const [getPrice] = useOracle();
   const [amount, setAmount] = useState("0");
   const [price, setPrice] = useState("0");
-  const { balance } = useActiveWeb3();
+  const { balance: ethBalance } = useActiveWeb3();
 
   const handleInput = (event: any) => {
     event.preventDefault();
@@ -52,7 +52,7 @@ const Deposit = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Amount: {balance} Price: ${price}
+                        Amount: {ethBalance} Price: ${price}
                       </label>
                       <input
                         id="token"
@@ -76,7 +76,7 @@ const Deposit = () => {
                         autoComplete="token-name"
                         className="h-14 mt-1 block text-white text-xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option>AVAX</option>
+                        <option>ETH</option>
                         <option>BTC</option>
                         <option>ONE</option>
                       </select>
