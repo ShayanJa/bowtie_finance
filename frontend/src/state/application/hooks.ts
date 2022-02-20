@@ -14,6 +14,7 @@ import { getNetwork } from "@ethersproject/networks";
 import { utils } from "ethers";
 import { web3Connect, web3Disconnect } from "./actions";
 import { AppDispatch, AppState } from "..";
+// import WalletConnectProvider from "@walletconnect/web3-provider";
 
 type GeneralProvider =
   | JsonRpcProvider
@@ -25,6 +26,14 @@ const web3Modal = new Web3Modal({
   network: "avax",
   theme: "dark",
   cacheProvider: true,
+  // providerOptions: {
+  //   walletconnect: {
+  //     package: WalletConnectProvider,
+  //     options: {
+  //       infuraId: "f9e55101f9f34182941ec80382cc4f93",
+  //     },
+  //   },
+  // },
 });
 
 export interface Web3Interface {
