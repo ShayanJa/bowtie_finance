@@ -9,6 +9,7 @@ import BorrowPaybackPage from "./views/BorrowPaybackPage";
 import DepositWithdrawPage from "./views/DepositBorrowPage";
 import { useSubscribe } from "./state/application/hooks";
 import FarmPage from "./views/Farm";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   useSubscribe();
@@ -26,6 +27,32 @@ const App = () => {
             <NotFound />
           </Route>
         </Switch>
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          toastOptions={{
+            // Define default options
+            duration: 5000,
+            style: {
+              padding: "16px",
+              background: "#343333",
+              color: "#fff",
+            },
+            // Default options for specific types
+            success: {
+              duration: 3000,
+              theme: {
+                primary: "green",
+                secondary: "black",
+                duration: 5000,
+                icon: "🔥",
+              },
+            },
+            loading: {
+              duration: 100000,
+            },
+          }}
+        />
       </Router>
     </div>
   );

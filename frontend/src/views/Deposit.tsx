@@ -17,15 +17,16 @@ const Deposit = () => {
   };
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    if(isAllowed){
-      async () => await deposit(amount)
+    if (isAllowed) {
+      async () => await deposit(amount);
     }
-      async () => await approve()
-  }
+    async () => await approve();
+  };
   const [isAllowed, setIsAllowed] = useState(false);
   useEffect(() => {
     const setup = async () => {
       const allowed = await allowance();
+      console.log(allowed);
       setIsAllowed(allowed);
       const newPrice = await getPrice();
       setPrice(newPrice);
@@ -34,12 +35,12 @@ const Deposit = () => {
   });
   return (
     <>
-      <h2 className="mt-10 text-xl leading-6 font-medium text-white">Deposit</h2>
+      <h2 className="mt-10 text-xl leading-6 font-medium text-white">
+        Deposit
+      </h2>
       <main>
         <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8 bg-blend-multiply">
-        <div>
-      
-    </div>
+          <div></div>
 
           <div className="px-4 py-6 sm:px-0">
             <form onSubmit={handleSubmit}>

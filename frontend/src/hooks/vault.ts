@@ -3,6 +3,7 @@ import { useActiveWeb3 } from "../state/application/hooks";
 import { useVaultContract } from "./contracts";
 import { ethers, utils } from "ethers";
 import { TestUSDCoin__factory } from "../contracts/generated";
+import toast from "react-hot-toast";
 
 export const useVault = (): [
   () => Promise<boolean>,
@@ -17,8 +18,15 @@ export const useVault = (): [
   const allowance = useCallback(async () => {
     try {
       const collateral = await vault.collateral();
+      console.log(collateral);
+
+      console.log(provider);
       const coin = TestUSDCoin__factory.connect(collateral, provider);
+      console.log("here");
+      console.log(coin);
       const x = await coin.allowance(address, vault.address);
+      console.log(x);
+      console.log("s");
       return x.gt(0);
     } catch (e) {
       console.log(e);
@@ -28,9 +36,21 @@ export const useVault = (): [
 
   const approve = useCallback(async () => {
     try {
-      const collateral = await vault.collateral();
-      const coin = TestUSDCoin__factory.connect(collateral, provider);
-      await coin.approve(vault.address, ethers.constants.MaxUint256);
+      const req = async () => {
+        const collateral = await vault.collateral();
+        const coin = TestUSDCoin__factory.connect(collateral, provider);
+        const tx = await coin.approve(
+          vault.address,
+          ethers.constants.MaxUint256
+        );
+        await tx.wait();
+      };
+
+      await toast.promise(req(), {
+        loading: "Approving...",
+        success: "Approved",
+        error: "Error approving",
+      });
     } catch (e) {
       console.log(e);
     }
@@ -39,8 +59,18 @@ export const useVault = (): [
   const deposit = useCallback(
     async (amount) => {
       try {
-        const tx = await vault.depositETH({ value: utils.parseEther(amount) });
-        await tx.wait();
+        const req = async () => {
+          const tx = await vault.depositETH({
+            value: utils.parseEther(amount),
+          });
+          await tx.wait();
+        };
+
+        await toast.promise(req(), {
+          loading: "Depositing...",
+          success: "Deposited",
+          error: "Error depositing",
+        });
       } catch (e) {
         console.log(e);
       }

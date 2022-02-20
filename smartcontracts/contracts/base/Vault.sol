@@ -7,6 +7,8 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
+
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract BaseVault is Ownable {
@@ -16,6 +18,7 @@ contract BaseVault is Ownable {
     IERC20Mintable public usdB;
     IERC20 public collateral;
     IStakingRewards public stakingRewards;
+    IWETH immutable public WETH;
     
     mapping(address => uint256) public balancesOf;
     mapping(address => uint256) public borrowed;
@@ -30,16 +33,27 @@ contract BaseVault is Ownable {
         address _collateral,
         address _usdB,
         address _oracle,
-        address _stakingRewards
+        address _stakingRewards,
+        address _weth
     ) {
         collateral = IERC20(_collateral);
         usdB = IERC20Mintable(_usdB);
         oracle = AggregatorV3Interface(_oracle);
         stakingRewards = IStakingRewards(_stakingRewards);
+        WETH = IWETH(_weth);
     }
 
     function deposit(uint256 amount) public {
         collateral.transferFrom(msg.sender, address(this), amount);
+        _deposit(amount);
+    }
+    
+    function depositETH() public payable{
+        require(msg.value > 0, "!value");
+        IWETH(WETH).deposit{value: msg.value}();
+        _deposit(msg.value);
+    }
+    function _deposit(uint256 amount) internal {
         uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
         collateral.transfer(address(stakingRewards), fee);
         stakingRewards.notifyRewardAmount(fee);

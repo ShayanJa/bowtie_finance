@@ -18,12 +18,12 @@
       },
       {
         "internalType": "address",
-        "name": "_stratVault",
+        "name": "_stakingRewards",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_WETH",
+        "name": "_weth",
         "type": "address"
       }
     ],
@@ -106,7 +106,7 @@
     "name": "WETH",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IWETH",
         "name": "",
         "type": "address"
       }
@@ -154,7 +154,7 @@
         "type": "address"
       }
     ],
-    "name": "balanceOf",
+    "name": "balancesOf",
     "outputs": [
       {
         "internalType": "uint256",
@@ -246,19 +246,6 @@
     "name": "depositETH",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "depositIntoSubVault",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -428,42 +415,10 @@
   },
   {
     "inputs": [],
-    "name": "rewardToken",
+    "name": "stakingRewards",
     "outputs": [
       {
-        "internalType": "contract IERC20Mintable",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "sharesOf",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stratVault",
-    "outputs": [
-      {
-        "internalType": "contract IRibbonThetaVault",
+        "internalType": "contract IStakingRewards",
         "name": "",
         "type": "address"
       }

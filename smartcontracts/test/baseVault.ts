@@ -2,18 +2,10 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import {
-  BaseVault,
-  MockOracle,
-  MockRibbonThetaVault,
-  MockUSD,
-  WETH9,
-  Vault,
-} from "../typechain";
+import { BaseVault, MockOracle, MockUSD, WETH9, Vault } from "../typechain";
 
 describe("BaseVault", function () {
   let sender: SignerWithAddress;
-  let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
   let weth: WETH9;
@@ -35,17 +27,36 @@ describe("BaseVault", function () {
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
 
+    const STAKING = await ethers.getContractFactory("StakingRewards");
+    const staking = await STAKING.deploy(
+      sender.address,
+      sender.address,
+      weth.address,
+      weth.address
+    );
+
     const Vault = await ethers.getContractFactory("BaseVault");
     vault = await Vault.deploy(
       weth.address,
       usdb.address,
       oracle.address,
+      staking.address,
       weth.address
     );
+    await staking.setRewardsDistribution(vault.address);
     await usdb.transferOwnership(vault.address);
-    collateralValue = 295236344964;
+
+    collateralValue = 34282571855523750000000000000;
   });
 
+  it("should deposit ETH", async function () {
+    initSnapshotId = await takeSnapshot();
+    await vault.depositETH({ value: initialDeposit });
+    expect(await vault.balancesOf(sender.address)).to.be.eq(
+      initialDeposit.mul(99).div(100)
+    );
+    revertToSnapShot(initSnapshotId);
+  });
   it("Should mint tokens", async function () {
     await weth.deposit({ value: initialDeposit });
     const afterMint = await weth.balanceOf(sender.address);
@@ -54,7 +65,9 @@ describe("BaseVault", function () {
   it("should deposit tokens", async function () {
     await weth.approve(vault.address, initialDeposit);
     await vault.deposit(initialDeposit);
-    expect(await vault.balancesOf(sender.address)).to.be.eq(initialDeposit);
+    expect(await vault.balancesOf(sender.address)).to.be.eq(
+      initialDeposit.mul(99).div(100)
+    );
   });
 
   it("should have proper value of colatteral", async function () {
@@ -100,7 +113,6 @@ describe("BaseVault", function () {
   });
   it("should liquidate", async function () {
     const depositAmount = 1e8;
-    await ribbonVault.approve(vault.address, depositAmount);
     await vault.deposit(depositAmount);
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));
@@ -113,7 +125,6 @@ describe("BaseVault", function () {
 describe("UsdB", function () {
   // eslint-disable-next-line no-unused-vars
   let sender: SignerWithAddress;
-  let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
   let vault: BaseVault;
@@ -129,11 +140,23 @@ describe("UsdB", function () {
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
 
+    const WETH = await ethers.getContractFactory("WETH9");
+    weth = await WETH.deploy();
+
+    const STAKING = await ethers.getContractFactory("StakingRewards");
+    const staking = await STAKING.deploy(
+      sender.address,
+      sender.address,
+      weth.address,
+      weth.address
+    );
+
     const Vault = await ethers.getContractFactory("BaseVault");
     vault = await Vault.deploy(
       weth.address,
       usdb.address,
       oracle.address,
+      staking.address,
       weth.address
     );
   });

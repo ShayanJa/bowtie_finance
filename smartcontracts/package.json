@@ -35,7 +35,8 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "mainnet-fork": "./scripts/mainnet-fork.sh"
+    "mainnet-fork": "./scripts/mainnet-fork.sh",
+    "deploy:rinkeby": "npx hardhat run ./scripts/deploy/rinkeby.ts --network rinkeby"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.3.1",
