@@ -2,15 +2,13 @@ import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import Nav from "./components/Nav";
-
 import Home from "./views/Home";
 import About from "./views/About";
 import NotFound from "./views/NotFound";
-import Deposit from "./views/Deposit";
-import Withdraw from "./views/Withdraw";
 import BorrowPaybackPage from "./views/BorrowPaybackPage";
-import DepositWithdrawPage from './views/DepositBorrowPage'
+import DepositWithdrawPage from "./views/DepositBorrowPage";
 import { useSubscribe } from "./state/application/hooks";
+import FarmPage from "./views/Farm";
 
 const App = () => {
   useSubscribe();
@@ -23,6 +21,7 @@ const App = () => {
           <Route path="/portfolio" component={Home} />
           <Route path="/deposit" component={DepositWithdrawPage} />
           <Route path="/borrow" component={BorrowPaybackPage} />
+          <Route path="/farm" component={FarmPage} />
           <Route>
             <NotFound />
           </Route>
