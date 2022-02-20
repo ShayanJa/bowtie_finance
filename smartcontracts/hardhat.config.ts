@@ -37,7 +37,7 @@ const config: HardhatUserConfig = {
         // blockNumber: BLOCK_NUMBER[CHAINID],
       },
     },
-    ropsten: {
+    rinkeby: {
       url: process.env.ROPSTEN_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],

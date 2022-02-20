@@ -9,7 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-abstract contract BaseVault is Ownable {
+contract BaseVault is Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public oracle;
@@ -107,7 +107,9 @@ abstract contract BaseVault is Ownable {
                 .div(FEE_DECIMALS);
     }
 
-    function getValueOfCollateral(uint256 amount) virtual public view returns (uint256);
+    function getValueOfCollateral(uint256 amount) public view returns (uint256) {
+        return amount.mul(getLatestPrice()).div(oracle.decimals());
+    }
 
     function getLatestPrice() public view returns (uint256) {
         (, int256 price, , , ) = oracle.latestRoundData();

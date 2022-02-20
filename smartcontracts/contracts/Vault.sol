@@ -7,9 +7,6 @@ import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-// import {
-//     ReentrancyGuardUpgradeable
-// } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {SubVault} from './SubVault.sol';
 
@@ -22,11 +19,11 @@ contract Vault is Ownable {
     IERC20Mintable public rewardToken;
     IRibbonThetaVault public stratVault;
     
-    mapping(address => uint256) public balanceOf;
-    mapping(address => uint256) public sharesOf;
-    mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
-    mapping(address => address) private subVaults;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) public borrowed;
+    mapping(address => SubVault) public subVaults;
+    mapping(address => uint256) public owedLiquidations;
 
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
@@ -47,10 +44,17 @@ contract Vault is Ownable {
         stratVault = IRibbonThetaVault(_stratVault);
         collateral = IERC20(_collateral);
     }
+    // function balanceOf(address addr) public view returns (uint256) {
+    //     if(address(subVaults[addr]) != address(0)) {
+    //         return subVaults[addr].getValueInUnderlying();
+    //     }
+    //     return 0;
+    // }
     
     function depositETH() public payable{
         require(msg.value > 0, "!value");
         IWETH(WETH).deposit{value: msg.value}();
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(msg.value);
         _deposit(msg.value);
     }
     
@@ -61,24 +65,15 @@ contract Vault is Ownable {
     }
     
     function _deposit(uint256 amount) internal {
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
-        address vault = subVaults[msg.sender];
-        if(vault == address(0)) {
-            vault = address(new SubVault(address(collateral), address(stratVault)));
+        SubVault vault = subVaults[msg.sender];
+        if(address(vault) == address(0)) {
+            vault = new SubVault(address(collateral), address(stratVault));
             subVaults[msg.sender] = vault;
         }
-        collateral.approve(address(vault), amount);
-        SubVault(vault).deposit(amount);
+        collateral.approve(address(stratVault), amount);
+        stratVault.depositFor(amount, address(vault));
     }
-  
-    function withdraw(uint256 amount) public {
-        require(
-            amount <= balanceOf[msg.sender],
-            "Must be less than deposited"
-        );
-        balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
-        // stratVault.deposit(msg.sender, amount);
-    }
+    
 
     function borrow(uint256 amount) public {
         require(amount < maximumBorrowAmount(msg.sender), "Borrowing too much");
@@ -126,6 +121,7 @@ contract Vault is Ownable {
     }
 
     function maximumBorrowAmount(address user) public view returns (uint256) {
+        require(address(subVaults[user]) != address(0));
         uint256 val = SubVault(subVaults[user]).getValueInUnderlying();
         return
             getValueOfCollateral(val)
@@ -150,12 +146,21 @@ contract Vault is Ownable {
     }
 
     function liquidate(address user) public returns (bool) {
-        require(getValueOfCollateral(SubVault(subVaults[user]).getValueInUnderlying()) < borrowed[user]);
-        uint256 fee = balanceOf[user].mul(LIQUIDATION_FEE).div(
+        SubVault subVault = SubVault(subVaults[user]);
+        uint256 value = subVault.getValueInUnderlying();
+        require(getValueOfCollateral(value) < borrowed[user]);
+        uint256 fee = getValueOfCollateral(value).mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
+        borrowed[user] = 0;
+        owedLiquidations[msg.sender] = owedLiquidations[msg.sender].add(fee);
+    }
         
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(fee);
-        balanceOf[user] = 0;
+    function withdraw(uint256 amount) public {
+        SubVault(subVaults[msg.sender]).initiateWithdraw(amount);
+    }
+    
+    function withdrawTokens(address token, uint256 amount) public onlyOwner{
+        IERC20(token).transfer(owner(), amount);
     }
 }
