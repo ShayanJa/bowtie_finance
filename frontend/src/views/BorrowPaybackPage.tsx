@@ -9,12 +9,16 @@ const BorrowPaybackPage = () => {
   const [balance, setBalance] = useState("0");
   const [value, setValue] = useState("0");
   const [borrowedAmount, setborrowedAmount] = useState("0");
-
+  const [ratio, setRatio] = useState(0);
   useEffect(() => {
     const setup = async () => {
-      setBalance(await getBalance());
-      setValue(await getValueOfCollateral());
-      setborrowedAmount(await getBorrowed());
+      const bal = await getBalance();
+      const col = await getValueOfCollateral();
+      const bor = await getBorrowed();
+      setBalance(bal);
+      setValue(col);
+      setborrowedAmount(bor);
+      setRatio((parseFloat(col) * 100) / parseFloat(bor));
     };
     setup();
   }, []);
@@ -47,7 +51,8 @@ const BorrowPaybackPage = () => {
                 Collateral Ratio
               </dt>
               <dd className="mt-1 text-2xl font-semibold text-white">
-                185.714%
+                {/* 185.714% */}
+                {ratio.toFixed(3)} %
               </dd>
             </div>
           </dl>
