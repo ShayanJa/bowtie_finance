@@ -46,7 +46,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
         depositFor(amount, msg.sender);
     }
     
-    function accountValueBalance(address) external view returns (uint256) {
+    function accountVaultBalance(address) external view returns (uint256) {
         return mockAccountBalance[msg.sender];
     }
     

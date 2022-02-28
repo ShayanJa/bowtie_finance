@@ -147,7 +147,7 @@ describe("Vault", function () {
   // });
   it("should liquidate", async function () {
     const depositAmount = 1e8;
-    await ribbonVault.approve(vault.address, depositAmount);
+    // await ribbonVault.approve(vault.address, depositAmount);
     await vault.deposit(depositAmount);
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));

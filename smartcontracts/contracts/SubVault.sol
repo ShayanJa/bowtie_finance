@@ -24,9 +24,10 @@ contract SubVault is Ownable {
   }
   
   function getValueInUnderlying() public view returns (uint256){
-    (,uint104 amount,) = stratVault.depositReceipts(address(this));
+    // (,uint104 amount,) = stratVault.depositReceipts(address(this));
     uint256 accValue = stratVault.accountVaultBalance(address(this));
-    return  accValue.add(uint256(amount));
+    // return  accValue.add(uint256(amount));
+    return accValue;
   }
   
   function getLiquidValueInUnderlying(address subVault) public onlyOwner returns (uint256) {
