@@ -44,12 +44,12 @@ contract Vault is Ownable {
         stratVault = IRibbonThetaVault(_stratVault);
         collateral = IERC20(_collateral);
     }
-    // function balanceOf(address addr) public view returns (uint256) {
-    //     if(address(subVaults[addr]) != address(0)) {
-    //         return subVaults[addr].getValueInUnderlying();
-    //     }
-    //     return 0;
-    // }
+    function balanceOf(address addr) public view returns (uint256) {
+        if(address(subVaults[addr]) != address(0)) {
+            return subVaults[addr].getValueInUnderlying();
+        }
+        return 0;
+    }
     
     function depositETH() public payable{
         require(msg.value > 0, "!value");
