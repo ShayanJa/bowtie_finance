@@ -4,6 +4,7 @@ export const web3Connect = createAction<{
   address: string;
   balance: string;
   chainId: number;
+  blockNumber: number;
 }>("application/web3Connect");
 
 export const web3Disconnect = createAction("application/web3Disconnect");

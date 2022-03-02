@@ -20,7 +20,7 @@ const Borrow = () => {
       setMaxAmount(max);
     };
     setup();
-  });
+  }, [allowance, maxBorrow]);
   return (
     <>
       <h3 className="mt-10 text-xl leading-6 font-medium text-white">Borrow</h3>
@@ -36,7 +36,7 @@ const Borrow = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        Max Borrow: ${maxAmount}
+                        Max Borrow: ${parseFloat(maxAmount).toFixed(3)}
                       </label>
                       <input
                         id="token"

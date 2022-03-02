@@ -1,10 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
+import { useVault } from "../hooks/vault";
 
 const Withdraw = () => {
+  const [, , , , , , , , withdraw] = useVault();
+  const [amount, setAmount] = useState("0");
+
+  const handleInput = (event: any) => {
+    event.preventDefault();
+    setAmount(event.target.value);
+  };
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    console.log("You clicked submit.");
+    async () => await withdraw(amount);
   };
   return (
     <>
@@ -28,6 +36,7 @@ const Withdraw = () => {
                       <input
                         id="token"
                         name="token"
+                        onChange={handleInput}
                         autoComplete="token-name"
                         className="h-14 mt-1 block text-white text-2xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       />
@@ -52,16 +61,17 @@ const Withdraw = () => {
                       </select>
                     </div>
                   </div>
-                  <div className="py-8">
+                  {/* <div className="py-8">
                     <span className="text-xl font-medium text-white">
                       Balance:
                     </span>
                     <span className="pl-4 text-2xl font-semibold text-white">
                       2.5 ETH
                     </span>
-                  </div>
+                  </div> */}
 
                   <button
+                    onClick={() => withdraw(amount)}
                     type="submit"
                     className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >

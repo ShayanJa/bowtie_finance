@@ -21,7 +21,7 @@ const BorrowPaybackPage = () => {
       setRatio((parseFloat(col) * 100) / parseFloat(bor));
     };
     setup();
-  }, []);
+  }, [getBalance, getBorrowed, getValueOfCollateral]);
   return (
     <>
       <main>

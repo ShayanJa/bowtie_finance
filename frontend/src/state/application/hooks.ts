@@ -63,11 +63,16 @@ export const useWeb3Modal = (): [() => Promise<void>, () => void] => {
       const chainId: number = (
         await (window as any).web3Provider.detectNetwork()
       ).chainId;
+      const blockNumber: number = await (
+        window as any
+      ).web3Provider.getBlockNumber();
+
       dispatch(
         web3Connect({
           address,
           balance,
           chainId,
+          blockNumber,
         })
       );
     } catch (err) {
@@ -167,4 +172,13 @@ export const useSubscribe = () => {
     }
     return undefined;
   }, [chainId, address]); // eslint-disable-line
+};
+
+export const useForceUpdate = () => {
+  const [connectWallet] = useWeb3Modal();
+
+  const update = useCallback(async () => {
+    await connectWallet();
+  }, []);
+  return update;
 };

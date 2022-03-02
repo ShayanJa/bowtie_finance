@@ -13,7 +13,7 @@ const DepositWithdrawPage = () => {
       setValue(await getValueOfCollateral());
     };
     setup();
-  }, []);
+  }, [getBalance, getValueOfCollateral]);
   return (
     <>
       <main>
