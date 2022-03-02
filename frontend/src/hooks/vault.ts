@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useActiveWeb3 } from "../state/application/hooks";
+import { useActiveWeb3, useForceUpdate } from "../state/application/hooks";
 import { useVaultContract } from "./contracts";
 import { ethers, utils } from "ethers";
 import { TestUSDCoin__factory } from "../contracts/generated";
@@ -13,11 +13,12 @@ export const useVault = (): [
   (amount: string) => Promise<void>,
   () => Promise<string>,
   () => Promise<string>,
-  () => Promise<string>
+  () => Promise<string>,
+  (amount: string) => Promise<void>
 ] => {
   const vault = useVaultContract();
   const { address, provider } = useActiveWeb3();
-
+  const refresh = useForceUpdate();
   const balance = useCallback(async () => {
     try {
       const bal = await vault.balanceOf(address);
@@ -50,6 +51,7 @@ export const useVault = (): [
           ethers.constants.MaxUint256
         );
         await tx.wait();
+        await refresh();
       };
 
       await toast.promise(req(), {
@@ -75,8 +77,9 @@ export const useVault = (): [
         await toast.promise(req(), {
           loading: "Depositing...",
           success: "Deposited",
-          error: "Error depositing",
+          error: "Error Depositing",
         });
+        await refresh();
       } catch (e) {
         console.log(e);
       }
@@ -87,8 +90,16 @@ export const useVault = (): [
   const borrow = useCallback(
     async (amount) => {
       try {
-        const tx = await vault.borrow(utils.parseEther(amount));
-        await tx.wait();
+        const req = async () => {
+          const tx = await vault.borrow(utils.parseEther(amount));
+          await tx.wait();
+        };
+        await toast.promise(req(), {
+          loading: "Borrowing...",
+          success: "Borrowed",
+          error: "Error Borrowing",
+        });
+        await refresh();
       } catch (e) {
         console.log(e);
       }
@@ -126,6 +137,26 @@ export const useVault = (): [
     }
   }, [vault, address]);
 
+  const withdraw = useCallback(
+    async (amount) => {
+      try {
+        const req = async () => {
+          const tx = await vault.withdraw(utils.parseEther(amount));
+          await tx.wait();
+        };
+        await toast.promise(req(), {
+          loading: "Withdrawing...",
+          success: "Withdrawed",
+          error: "Error Withdrawing",
+        });
+        await refresh();
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [vault, address]
+  );
+
   return [
     balance,
     allowance,
@@ -135,5 +166,6 @@ export const useVault = (): [
     maxiumBorrow,
     getValueOfCollateral,
     borrowed,
+    withdraw,
   ];
 };

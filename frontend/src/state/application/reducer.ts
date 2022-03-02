@@ -1,5 +1,5 @@
 import { createReducer } from "@reduxjs/toolkit";
-import { updateUsdBalance, web3Connect, web3Disconnect } from "./actions";
+import { web3Connect, web3Disconnect } from "./actions";
 import { ChainId } from "../../constants";
 import { ethers } from "ethers";
 
@@ -11,6 +11,7 @@ export interface ApplicationState {
   readonly address: string;
   readonly balance: string;
   readonly chainId: number;
+  readonly blockNumber: number;
 }
 
 const initialState: ApplicationState = {
@@ -18,6 +19,7 @@ const initialState: ApplicationState = {
   address: "",
   balance: "0",
   chainId: ChainId.NOT_CONNECTED,
+  blockNumber: 0,
 };
 
 export default createReducer(initialState, (builder) =>
@@ -26,6 +28,7 @@ export default createReducer(initialState, (builder) =>
       state.address = action.payload.address;
       state.chainId = action.payload.chainId;
       state.balance = action.payload.balance;
+      state.blockNumber = action.payload.blockNumber;
     })
     .addCase(web3Disconnect, (state, action) => {
       state.address = "";

@@ -107,6 +107,7 @@ describe("Vault", function () {
   it("should not allow liquidation under the max amount", async function () {
     await expect(vault.liquidate(sender.address)).to.be.reverted;
   });
+
   describe("Sub Vault", () => {
     let subVault: SubVault;
     before(async function () {
@@ -117,16 +118,28 @@ describe("Vault", function () {
     it("should have vault as owner", async () => {
       expect(await subVault.owner()).to.be.eq(vault.address);
     });
+    it("should revert: only owner allowed to initiate withdraw", async function () {
+      const amount = 100;
+      await expect(subVault.initiateWithdraw(amount)).to.be.reverted;
+    });
     it("should revert: only owner allowed to withdraw tokeens", async function () {
       const collateral = await subVault.collateral();
       const amount = 100;
       await expect(subVault.withdrawTokens(collateral, amount)).to.be.reverted;
     });
-    it("owner vault can withdraw tokens from subVault ", async function () {
-      const collateral = await subVault.collateral();
+    it("only vault can withdraw tokens from subVault ", async function () {
       const amount = 100;
-      await vault.withdrawTokens(collateral, amount);
+      console.log(await subVault.owner());
+      console.log(sender.address);
+      await vault.withdraw(amount);
     });
+    // it("only vault can withdraw tokens from subVault ", async function () {
+    //   const collateral = await subVault.collateral();
+    //   const amount = 100;
+    //   await vault.withdraw(amount);
+    //   await vault.withdrawTokens(collateral, amount);
+    // });
+
     // it("should revert: only msg.sender and liquidator can access subVault", async function () {
     //   const collateral = await subVault.collateral();
     //   const amount = 100;
@@ -134,26 +147,30 @@ describe("Vault", function () {
     // });
   });
 
-  it("should pay back tokens", async function () {
-    const depositAmount = 1e8;
-    await vault.repay(depositAmount);
-    // expect(await rUsd.balanceOf(sender.address)).to.be.eq(0);
-    expect(await rUsd.totalSupply()).to.be.eq(0);
-  });
-  // it("should withdraw all tokens", async function () {
-  //   const amount = await vault.balanceOf(sender.address);
-  //   await vault.withdraw(amount);
-  //   expect(await vault.balanceOf(sender.address)).to.be.eq(0);
-  // });
-  it("should liquidate", async function () {
-    const depositAmount = 1e8;
-    await ribbonVault.approve(vault.address, depositAmount);
-    await vault.deposit(depositAmount);
-    const maxAmount = await vault.maximumBorrowAmount(sender.address);
-    await vault.borrow(maxAmount.sub(1));
-    await oracle.setPrice("27703088368");
-    await vault.liquidate(sender.address);
-    // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+  describe("cleanup", () => {
+    it("should pay back tokens", async function () {
+      const depositAmount = 1e8;
+      await vault.repay(depositAmount);
+      // expect(await rUsd.balanceOf(sender.address)).to.be.eq(0);
+      expect(await rUsd.totalSupply()).to.be.eq(0);
+    });
+    // it("should withdraw all tokens", async function () {
+    //   const amount = await vault.balanceOf(sender.address);
+    //   await vault.withdraw(amount);
+    //   expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+    // });
+
+    it("should liquidate", async function () {
+      const depositAmount = 1e8;
+      await weth.deposit({ value: depositAmount });
+      await weth.approve(vault.address, depositAmount);
+      await vault.deposit(depositAmount);
+      const maxAmount = await vault.maximumBorrowAmount(sender.address);
+      await vault.borrow(maxAmount.sub(1));
+      await oracle.setPrice("27703088368");
+      await vault.liquidate(sender.address);
+      // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+    });
   });
 });
 
