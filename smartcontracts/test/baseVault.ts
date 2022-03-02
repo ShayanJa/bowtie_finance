@@ -10,7 +10,6 @@ describe("BaseVault", function () {
   let usdb: MockUSD;
   let weth: WETH9;
   let vault: BaseVault;
-  let collateralValue: BigNumber;
   let initSnapshotId: string;
   let initialDeposit: BigNumber;
   before(async function () {
@@ -45,8 +44,6 @@ describe("BaseVault", function () {
     );
     await staking.setRewardsDistribution(vault.address);
     await usdb.transferOwnership(vault.address);
-
-    collateralValue = BigNumber.from("2742605748441900000000");
   });
 
   it("should deposit ETH", async function () {

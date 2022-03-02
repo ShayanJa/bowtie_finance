@@ -107,6 +107,7 @@ describe("Vault", function () {
   it("should not allow liquidation under the max amount", async function () {
     await expect(vault.liquidate(sender.address)).to.be.reverted;
   });
+
   describe("Sub Vault", () => {
     let subVault: SubVault;
     before(async function () {
@@ -146,26 +147,30 @@ describe("Vault", function () {
     // });
   });
 
-  it("should pay back tokens", async function () {
-    const depositAmount = 1e8;
-    await vault.repay(depositAmount);
-    // expect(await rUsd.balanceOf(sender.address)).to.be.eq(0);
-    expect(await rUsd.totalSupply()).to.be.eq(0);
-  });
-  // it("should withdraw all tokens", async function () {
-  //   const amount = await vault.balanceOf(sender.address);
-  //   await vault.withdraw(amount);
-  //   expect(await vault.balanceOf(sender.address)).to.be.eq(0);
-  // });
-  it("should liquidate", async function () {
-    const depositAmount = 1e8;
-    // await ribbonVault.approve(vault.address, depositAmount);
-    await vault.deposit(depositAmount);
-    const maxAmount = await vault.maximumBorrowAmount(sender.address);
-    await vault.borrow(maxAmount.sub(1));
-    await oracle.setPrice("27703088368");
-    await vault.liquidate(sender.address);
-    // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+  describe("cleanup", () => {
+    it("should pay back tokens", async function () {
+      const depositAmount = 1e8;
+      await vault.repay(depositAmount);
+      // expect(await rUsd.balanceOf(sender.address)).to.be.eq(0);
+      expect(await rUsd.totalSupply()).to.be.eq(0);
+    });
+    // it("should withdraw all tokens", async function () {
+    //   const amount = await vault.balanceOf(sender.address);
+    //   await vault.withdraw(amount);
+    //   expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+    // });
+
+    it("should liquidate", async function () {
+      const depositAmount = 1e8;
+      await weth.deposit({ value: depositAmount });
+      await weth.approve(vault.address, depositAmount);
+      await vault.deposit(depositAmount);
+      const maxAmount = await vault.maximumBorrowAmount(sender.address);
+      await vault.borrow(maxAmount.sub(1));
+      await oracle.setPrice("27703088368");
+      await vault.liquidate(sender.address);
+      // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+    });
   });
 });
 

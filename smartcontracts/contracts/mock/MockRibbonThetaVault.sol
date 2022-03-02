@@ -50,5 +50,9 @@ contract MockRibbonThetaVault is ERC20, Ownable {
         return mockAccountBalance[msg.sender];
     }
     
+    function initiateWithdraw(uint256 numShares) external {
+        asset.transfer(msg.sender, numShares); //TODO: fix up
+    }
+
     
 }

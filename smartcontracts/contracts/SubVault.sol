@@ -35,7 +35,7 @@ contract SubVault is Ownable {
     return uint256(amount).add(uint256(unredeemedShares));
   }
   
-  function initiateWithdraw(uint256 amount) public  {
+  function initiateWithdraw(uint256 amount) public onlyOwner {
     stratVault.initiateWithdraw(amount);
   }
   
