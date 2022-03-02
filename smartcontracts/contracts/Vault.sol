@@ -24,6 +24,8 @@ contract Vault is Ownable {
     mapping(address => uint256) public borrowed;
     mapping(address => SubVault) public subVaults;
     mapping(address => uint256) public owedLiquidations;
+    SubVault[] public OwnedSubvaults;
+    uint256 numOwnedSubvaults = 0;
 
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
@@ -154,6 +156,8 @@ contract Vault is Ownable {
         );
         borrowed[user] = 0;
         owedLiquidations[msg.sender] = owedLiquidations[msg.sender].add(fee);
+        OwnedSubvaults.push(subVault);
+        subVaults[user] = SubVault(address(0));
     }
         
     function withdraw(uint256 amount) public {

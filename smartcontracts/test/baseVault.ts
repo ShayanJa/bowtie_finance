@@ -10,7 +10,7 @@ describe("BaseVault", function () {
   let usdb: MockUSD;
   let weth: WETH9;
   let vault: BaseVault;
-  let collateralValue: number;
+  let collateralValue: BigNumber;
   let initSnapshotId: string;
   let initialDeposit: BigNumber;
   before(async function () {
@@ -46,7 +46,7 @@ describe("BaseVault", function () {
     await staking.setRewardsDistribution(vault.address);
     await usdb.transferOwnership(vault.address);
 
-    collateralValue = 34282571855523750000000000000;
+    collateralValue = BigNumber.from("2742605748441900000000");
   });
 
   it("should deposit ETH", async function () {
@@ -72,9 +72,13 @@ describe("BaseVault", function () {
 
   it("should have proper value of colatteral", async function () {
     const balance = await vault.balanceOf(sender.address);
-    expect(await vault.getValueOfCollateral(balance.toString())).to.eq(
-      collateralValue
-    );
+    const latestPrice = await vault.getLatestPrice();
+    const decimals = await oracle.decimals();
+    const expcted = balance
+      .mul(latestPrice)
+      .div(BigNumber.from(10).pow(decimals));
+    const colval = await vault.getValueOfCollateral(balance);
+    expect(colval).to.eq(expcted);
   });
   it("should revert: Can't borrow total colalteral amount", async function () {
     initSnapshotId = await takeSnapshot();
@@ -113,6 +117,7 @@ describe("BaseVault", function () {
   });
   it("should liquidate", async function () {
     const depositAmount = 1e8;
+    await weth.approve(vault.address, depositAmount);
     await vault.deposit(depositAmount);
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));

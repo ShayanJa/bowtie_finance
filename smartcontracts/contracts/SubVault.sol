@@ -30,12 +30,12 @@ contract SubVault is Ownable {
     return accValue;
   }
   
-  function getLiquidValueInUnderlying(address subVault) public onlyOwner returns (uint256) {
+  function getLiquidValueInUnderlying(address subVault) public returns (uint256) {
     (,uint104 amount,uint128 unredeemedShares) = stratVault.depositReceipts(address(this));
     return uint256(amount).add(uint256(unredeemedShares));
   }
   
-  function initiateWithdraw(uint256 amount) public onlyOwner {
+  function initiateWithdraw(uint256 amount) public  {
     stratVault.initiateWithdraw(amount);
   }
   
