@@ -14,6 +14,7 @@ export const useVault = (): [
   () => Promise<string>,
   () => Promise<string>,
   () => Promise<string>,
+  (amount: string) => Promise<void>,
   (amount: string) => Promise<void>
 ] => {
   const vault = useVaultContract();
@@ -141,13 +142,32 @@ export const useVault = (): [
     async (amount) => {
       try {
         const req = async () => {
-          const tx = await vault.withdraw(utils.parseEther(amount));
+          const tx = await vault.repay(utils.parseEther(amount));
           await tx.wait();
         };
         await toast.promise(req(), {
-          loading: "Withdrawing...",
-          success: "Withdrawed",
-          error: "Error Withdrawing",
+          loading: "Repaying...",
+          success: "Repayed",
+          error: "Error Repaying",
+        });
+        await refresh();
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [vault, address]
+  );
+  const payback = useCallback(
+    async (amount) => {
+      try {
+        const req = async () => {
+          const tx = await vault.repay(utils.parseEther(amount));
+          await tx.wait();
+        };
+        await toast.promise(req(), {
+          loading: "Repaying...",
+          success: "Repayed",
+          error: "Error Repaying",
         });
         await refresh();
       } catch (e) {
@@ -167,5 +187,6 @@ export const useVault = (): [
     getValueOfCollateral,
     borrowed,
     withdraw,
+    payback,
   ];
 };
