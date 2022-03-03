@@ -29,7 +29,8 @@ contract Vault is Ownable {
 
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
-    uint256 public constant COLATERALIZATION_FACTOR = 9500;
+    uint256 public constant DISCOUNTED_DEBT_FEE = 500;
+    uint256 public constant COLATERALIZATION_FACTOR = 9000;
     uint256 public constant FEE_DECIMALS = 4;
     address public immutable WETH;
 
@@ -149,8 +150,8 @@ contract Vault is Ownable {
 
     function liquidate(address user) public returns (bool) {
         SubVault subVault = SubVault(subVaults[user]);
+        require(maximumBorrowAmount(user) < borrowed[user]);
         uint256 value = subVault.getValueInUnderlying();
-        require(getValueOfCollateral(value) < borrowed[user]);
         uint256 fee = getValueOfCollateral(value).mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
@@ -158,6 +159,8 @@ contract Vault is Ownable {
         owedLiquidations[msg.sender] = owedLiquidations[msg.sender].add(fee);
         OwnedSubvaults.push(subVault);
         subVaults[user] = SubVault(address(0));
+        numOwnedSubvaults += 1;
+        
     }
         
     function withdraw(uint256 amount) public {
@@ -167,4 +170,13 @@ contract Vault is Ownable {
     function withdrawTokens(address token, uint256 amount) public onlyOwner{
         IERC20(token).transfer(owner(), amount);
     }
+    
+    function buyDebt(address _subVault) public {
+        SubVault subVault = SubVault(_subVault);
+        uint256 val = subVault.getValueInUnderlying();
+
+        uint256 discountedCollateral = val.mul(DISCOUNTED_DEBT_FEE).div(10**FEE_DECIMALS);
+        collateral.transferFrom(msg.sender, address(this), discountedCollateral);
+        subVaults[msg.sender] = subVault;
+    }    
 }

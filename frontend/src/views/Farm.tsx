@@ -1,7 +1,42 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
+import { useStakingRewards } from "../hooks/stake";
+import { useToken } from "../hooks/token";
 
 const FarmPage = () => {
+  const [allowance, approve, totalStaked, stake, unstake, getBalance, reward] =
+    useStakingRewards();
+  const [getCollateralBalance] = useToken();
+  const [amount, setAmount] = useState("0");
+  const [balance, setBalance] = useState("0");
+  const [total, setTotal] = useState("0");
+  const [isAllowed, setIsAllowed] = useState(false);
+  const [colBal, setColBal] = useState("0");
+  const [apy, setAPY] = useState("0");
+
+  const handleInput = (event: any) => {
+    event.preventDefault();
+    setAmount(event.target.value);
+  };
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    if (isAllowed) {
+      async () => await stake(amount);
+    }
+    async () => await approve();
+  };
+  useEffect(() => {
+    const setup = async () => {
+      const allowed = await allowance();
+      setIsAllowed(allowed);
+      setBalance(await getBalance());
+      setTotal(await totalStaked());
+      setColBal(await getCollateralBalance());
+      setAPY(await reward());
+    };
+    setup();
+  }, [allowance, getBalance, totalStaked, getCollateralBalance]);
+
   return (
     <>
       <Header title="Farms" />
@@ -12,18 +47,18 @@ const FarmPage = () => {
               <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <div className="px-4 py-5 overflow-hidden sm:p-6">
                   <dt className="text-lg font-medium text-white truncate">
-                    Volume
+                    Total Staked
                   </dt>
                   <dd className="mt-1 text-2xl font-semibold text-white">
-                    $143M
+                    {total}
                   </dd>
                 </div>
                 <div className="px-4 py-5 rounded-3xl overflow-hidden sm:p-6">
                   <dt className="text-lg font-medium text-white truncate">
-                    Staked
+                    My Stake
                   </dt>
                   <dd className="mt-1 text-2xl font-semibold text-white">
-                    1.43242421 AVAX
+                    {balance}
                   </dd>
                 </div>
                 <div className="px-4 py-5 rounded-3xl overflow-hidden sm:p-6">
@@ -31,7 +66,7 @@ const FarmPage = () => {
                     APY
                   </dt>
                   <dd className="mt-1 text-2xl font-semibold text-white">
-                    14.5%
+                    {apy}
                   </dd>
                 </div>
               </dl>
@@ -44,7 +79,7 @@ const FarmPage = () => {
                     <div className="col-span-2 sm:col-span-2">
                       <input
                         id="token"
-                        // onChange={}
+                        onChange={handleInput}
                         name="token"
                         autoComplete="token-name"
                         className="h-14 mt-1 block text-white text-2xl font-semibold w-full py-2 px-3 border-gray-300 bg-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -56,16 +91,28 @@ const FarmPage = () => {
                         className="h-10"
                       />
                     </div>
+                    <div className="pb-2 block text-xl font-medium text-white">
+                      {/* TODO */}
+                      Balance: {colBal}
+                    </div>
                   </div>
-                  <button className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Stake
-                  </button>
-                  <button className="inline-flex mt-5 mx-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <div
+                    onClick={isAllowed ? () => stake(amount) : () => approve()}
+                    className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    {isAllowed ? "Stake" : "Approve"}
+                  </div>
+                  <div
+                    onClick={
+                      isAllowed ? () => unstake(amount) : () => approve()
+                    }
+                    className="inline-flex mt-5 mx-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
                     Unstake
-                  </button>
-                  <button className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  </div>
+                  <div className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Claim
-                  </button>
+                  </div>
                 </div>
               </form>
             </div>

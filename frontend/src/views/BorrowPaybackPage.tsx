@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Borrow from "./Borrow";
+import Payback from "./Payback";
 import { useVault } from "../hooks/vault";
 
 const BorrowPaybackPage = () => {
@@ -57,6 +58,7 @@ const BorrowPaybackPage = () => {
             </div>
           </dl>
           <Borrow />
+          <Payback />
           {/* TODO
               <Payback/> */}
         </div>

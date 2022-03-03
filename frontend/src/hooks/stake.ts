@@ -3,11 +3,16 @@ import { useActiveWeb3 } from "../state/application/hooks";
 import { useStakingContract } from "./contracts";
 import { ethers, utils } from "ethers";
 import { TestUSDCoin__factory } from "../contracts/generated";
+import toast from "react-hot-toast";
 
 export const useStakingRewards = (): [
   () => Promise<boolean>,
-  () => Promise<void>
-  // (amount: string) => Promise<void>
+  () => Promise<void>,
+  () => Promise<string>,
+  (amount: string) => Promise<void>,
+  (amount: string) => Promise<void>,
+  () => Promise<string>,
+  () => Promise<string>
 ] => {
   const staking = useStakingContract();
   const { address, provider } = useActiveWeb3();
@@ -29,5 +34,62 @@ export const useStakingRewards = (): [
     }
   }, [address, provider]);
 
-  return [allowance, approve];
+  const totalStaked = useCallback(async () => {
+    try {
+      return utils.formatEther(await staking.totalSupply());
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [provider]);
+
+  const stake = useCallback(async (amount) => {
+    try {
+      const req = async () => {
+        const tx = await staking.stake(utils.parseEther(amount));
+        await tx.wait();
+      };
+      await toast.promise(req(), {
+        loading: "Staking...",
+        success: "Staked",
+        error: "Error Staking",
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+  const unstake = useCallback(async (amount) => {
+    try {
+      const req = async () => {
+        const tx = await staking.withdraw(utils.parseEther(amount));
+        await tx.wait();
+      };
+      await toast.promise(req(), {
+        loading: "Unstaking...",
+        success: "Unstaked",
+        error: "Error Withdrawing",
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+
+  const balance = useCallback(async () => {
+    try {
+      return utils.formatEther(await staking.balanceOf(address));
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [provider]);
+
+  const reward = useCallback(async () => {
+    try {
+      return utils.formatEther(await staking.rewardPerToken()); //TODO: Fix
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [provider]);
+  return [allowance, approve, totalStaked, stake, unstake, balance, reward];
 };
