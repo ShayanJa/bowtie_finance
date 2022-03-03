@@ -6,6 +6,7 @@ import {
   VAULT_ADDRESS,
   STAKING_ADDRESS,
   ORACLE_ADDRESS,
+  COLLATERAL_ADDRESS,
 } from "../constants";
 
 import {
@@ -14,14 +15,26 @@ import {
   Vault__factory,
   StakingRewards__factory,
   Oracle__factory,
+  Usdb__factory,
+  Weth__factory,
 } from "../contracts/generated";
 import { constants } from "ethers";
 
 export const useUsdbTokenContract = () => {
   const { provider, chainId } = useActiveWeb3();
   return useMemo(() => {
-    return TestUSDCoin__factory.connect(
+    return Usdb__factory.connect(
       USDB_ADDRESS[chainId] || constants.AddressZero,
+      provider
+    );
+  }, [provider, chainId]);
+};
+
+export const useTokenContract = () => {
+  const { provider, chainId } = useActiveWeb3();
+  return useMemo(() => {
+    return Weth__factory.connect(
+      COLLATERAL_ADDRESS[chainId] || constants.AddressZero,
       provider
     );
   }, [provider, chainId]);
