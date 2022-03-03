@@ -10,6 +10,7 @@ export const useStakingRewards = (): [
   () => Promise<void>,
   () => Promise<string>,
   (amount: string) => Promise<void>,
+  (amount: string) => Promise<void>,
   () => Promise<string>,
   () => Promise<string>
 ] => {
@@ -49,8 +50,23 @@ export const useStakingRewards = (): [
         await tx.wait();
       };
       await toast.promise(req(), {
-        loading: "Withdraw...",
-        success: "Withdrawed",
+        loading: "Staking...",
+        success: "Staked",
+        error: "Error Staking",
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
+  const unstake = useCallback(async (amount) => {
+    try {
+      const req = async () => {
+        const tx = await staking.withdraw(utils.parseEther(amount));
+        await tx.wait();
+      };
+      await toast.promise(req(), {
+        loading: "Unstaking...",
+        success: "Unstaked",
         error: "Error Withdrawing",
       });
     } catch (e) {
@@ -75,5 +91,5 @@ export const useStakingRewards = (): [
       return "0";
     }
   }, [provider]);
-  return [allowance, approve, totalStaked, stake, balance, reward];
+  return [allowance, approve, totalStaked, stake, unstake, balance, reward];
 };

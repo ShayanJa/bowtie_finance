@@ -4,7 +4,7 @@ import { useStakingRewards } from "../hooks/stake";
 import { useToken } from "../hooks/token";
 
 const FarmPage = () => {
-  const [allowance, approve, totalStaked, stake, getBalance, reward] =
+  const [allowance, approve, totalStaked, stake, unstake, getBalance, reward] =
     useStakingRewards();
   const [getCollateralBalance] = useToken();
   const [amount, setAmount] = useState("0");
@@ -102,7 +102,12 @@ const FarmPage = () => {
                   >
                     {isAllowed ? "Stake" : "Approve"}
                   </div>
-                  <div className="inline-flex mt-5 mx-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <div
+                    onClick={
+                      isAllowed ? () => unstake(amount) : () => approve()
+                    }
+                    className="inline-flex mt-5 mx-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
                     Unstake
                   </div>
                   <div className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
