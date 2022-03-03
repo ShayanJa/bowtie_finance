@@ -142,13 +142,13 @@ export const useVault = (): [
     async (amount) => {
       try {
         const req = async () => {
-          const tx = await vault.repay(utils.parseEther(amount));
+          const tx = await vault.withdraw(utils.parseEther(amount));
           await tx.wait();
         };
         await toast.promise(req(), {
-          loading: "Repaying...",
-          success: "Repayed",
-          error: "Error Repaying",
+          loading: "Withdraw...",
+          success: "Withdrawed",
+          error: "Error Withdrawing",
         });
         await refresh();
       } catch (e) {

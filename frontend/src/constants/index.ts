@@ -22,7 +22,7 @@ export const USDB_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.DEVELOPMENT]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
   [ChainId.AVAX]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
   [ChainId.FUJI]: "0x1e566B755e0aE9394D081635eE8724c35d3570ff",
-  [ChainId.RINKEBY]: "0x6adfcF0b9Ea4E0e9E37C3244503E7b768B4DdcE4",
+  [ChainId.RINKEBY]: "0x5d8F59dfC94dEc4cDedC16dBcfE41369a5dEe038",
   [ChainId.ONE]: "",
 };
 
@@ -31,7 +31,7 @@ export const CURVE_POOL_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.NOT_CONNECTED]: "",
   [ChainId.AVAX]: "",
   [ChainId.FUJI]: "",
-  [ChainId.RINKEBY]: "",
+  [ChainId.RINKEBY]: "0xDD1a612550FC1c00A36d6ef20E456ea6af955722", //TODO change
   [ChainId.ONE]: "",
 };
 
@@ -49,7 +49,7 @@ export const COLLATERAL_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.DEVELOPMENT]: "",
   [ChainId.AVAX]: "",
   [ChainId.FUJI]: "",
-  [ChainId.RINKEBY]: "0xDD1a612550FC1c00A36d6ef20E456ea6af955722",
+  [ChainId.RINKEBY]: "0x4e7719A3d9e917521A8D708cFB553dA497e0f2A3",
   [ChainId.ONE]: "",
 };
 
@@ -59,7 +59,7 @@ export const VAULT_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.DEVELOPMENT]: "0x26301F4CA0d63f518e394919B12C76601dfDD5b8", // mainnet-fork
   [ChainId.AVAX]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
   [ChainId.FUJI]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
-  [ChainId.RINKEBY]: "0x97d7a585C6cA22d8920413B87C4002e8bFD586E4",
+  [ChainId.RINKEBY]: "0xd295CCe00bF8B3a5e482FAe4D39862EDAC37bD9A",
   [ChainId.ONE]: "",
 };
 
@@ -68,7 +68,7 @@ export const STAKING_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.DEVELOPMENT]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
   [ChainId.AVAX]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
   [ChainId.FUJI]: "0x566B69225CaD8F2AF3f1Ee890aF569316FFB3e4A",
-  [ChainId.RINKEBY]: "0x245b2A1C6ECB5d5b5CEB2548a9390bF7cBD4b2C0",
+  [ChainId.RINKEBY]: "0x43Fb4399d4b9f490b19A12a044af6448b4460F3A",
   [ChainId.ONE]: "",
 };
 
