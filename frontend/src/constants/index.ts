@@ -49,7 +49,7 @@ export const COLLATERAL_ADDRESS: { [chainId in ChainId]: string } = {
   [ChainId.DEVELOPMENT]: "",
   [ChainId.AVAX]: "",
   [ChainId.FUJI]: "",
-  [ChainId.RINKEBY]: "0x4e7719A3d9e917521A8D708cFB553dA497e0f2A3",
+  [ChainId.RINKEBY]: "0xbE7ad620959bF802e1FffdE9d1c15606DeCAFC5d",
   [ChainId.ONE]: "",
 };
 

@@ -26,7 +26,7 @@ contract BaseVault is Ownable {
     
     uint256 public constant LIQUIDATION_FEE = 500;
     uint256 public constant DEPOSIT_FEE = 100;
-    uint256 public constant COLATERALIZATION_FACTOR = 9500;
+    uint256 public constant COLATERALIZATION_FACTOR = 8000;
     uint256 public constant FEE_DECIMALS = 4;
 
     constructor(
@@ -65,6 +65,10 @@ contract BaseVault is Ownable {
             amount <= balanceOf[msg.sender],
             "Must be less than deposited"
         );
+        require(balanceOf[msg.sender].sub(amount) > 
+        getValueOfCollateral(balanceOf[msg.sender])
+                .mul(COLATERALIZATION_FACTOR)
+                .div(10**FEE_DECIMALS), "Too low of collateral");
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
         collateral.transfer(msg.sender, amount);
     }
