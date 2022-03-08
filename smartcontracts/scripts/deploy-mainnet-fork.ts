@@ -6,6 +6,8 @@
 import { ethers } from "hardhat";
 
 async function main() {
+  const [sender] = await ethers.getSigners();
+
   const oracle = await ethers.getContractAt(
     "AggregatorV3Interface",
     "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419"
@@ -25,21 +27,31 @@ async function main() {
   const USDB = await ethers.getContractFactory("UsdB");
   const usdb = await USDB.deploy();
 
-  const Vault = await ethers.getContractFactory("Vault");
+  const STAKING = await ethers.getContractFactory("StakingRewards");
+  const staking = await STAKING.deploy(
+    sender.address,
+    sender.address,
+    weth.address,
+    weth.address
+  );
+
+  const Vault = await ethers.getContractFactory("BaseVault");
   const vault = await Vault.deploy(
     weth.address,
     usdb.address,
     oracle.address,
-    ribbonVault.address,
+    staking.address,
     weth.address
   );
 
   await vault.deployed();
-
+  await staking.setRewardsDistribution(vault.address);
+  await usdb.transferOwnership(vault.address);
   console.log({
-    ribbonVault: ribbonVault.address,
+    weth: weth.address,
     usdb: usdb.address,
     vault: vault.address,
+    staking: staking.address,
   });
 }
 
