@@ -2,18 +2,36 @@ import React, { useEffect, useState } from "react";
 import Deposit from "./Deposit";
 import Withdraw from "./Withdraw";
 import { useVault } from "../hooks/vault";
+import { useAPY } from "../hooks/useAPY";
 
 const DepositWithdrawPage = () => {
-  const [getBalance, , , , , maxiumBorrow, getValueOfCollateral] = useVault();
+  const [
+    getBalance,
+    ,
+    ,
+    ,
+    ,
+    maxiumBorrow,
+    getValueOfCollateral,
+    ,
+    ,
+    ,
+    getMaxWithdraw,
+  ] = useVault();
+  const [getAPY] = useAPY();
   const [balance, setBalance] = useState("0");
   const [value, setValue] = useState("0");
+  const [apy, setAPY] = useState("0");
+  const [maxWithdraw, setMaxWithdraw] = useState("0");
   useEffect(() => {
     const setup = async () => {
       setBalance(await getBalance());
       setValue(await getValueOfCollateral());
+      setAPY(await getAPY());
+      setMaxWithdraw(await getMaxWithdraw());
     };
     setup();
-  }, [getBalance, getValueOfCollateral]);
+  }, [getBalance, getValueOfCollateral, getAPY, getMaxWithdraw]);
   return (
     <>
       <main>
@@ -34,7 +52,7 @@ const DepositWithdrawPage = () => {
                   Earning
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  18.3 %
+                  {apy} %
                 </dd>
               </div>
               <div className="px-4 py-5 bg-gray-800 shadow rounded-3xl overflow-hidden sm:p-6">
@@ -42,7 +60,7 @@ const DepositWithdrawPage = () => {
                   Available to Withdraw
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  0.3 ETH
+                  {maxWithdraw} ETH
                 </dd>
               </div>
             </dl>

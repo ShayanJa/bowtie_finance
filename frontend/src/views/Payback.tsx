@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { useActiveWeb3 } from "../state/application/hooks";
 import { useVault } from "../hooks/vault";
-import { useToken } from "../hooks/token";
 
 const Payback = () => {
-  const [, allowance, , , , , , , payback] = useVault();
-  const [bal] = useToken();
+  const [bal, allowance, , , , , , , payback] = useVault();
   const [amount, setAmount] = useState("0");
   const [balance, setBalance] = useState("0");
 

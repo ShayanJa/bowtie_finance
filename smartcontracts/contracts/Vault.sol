@@ -20,7 +20,6 @@ contract Vault is Ownable {
     IRibbonThetaVault public stratVault;
     
     mapping(address => bool) public allowedStables;
-    // mapping(address => uint256) public balanceOf;
     mapping(address => uint256) public borrowed;
     mapping(address => SubVault) public subVaults;
     mapping(address => uint256) public owedLiquidations;

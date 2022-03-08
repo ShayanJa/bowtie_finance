@@ -4,6 +4,7 @@ import { useVaultContract } from "./contracts";
 import { ethers, utils } from "ethers";
 import { TestUSDCoin__factory } from "../contracts/generated";
 import toast from "react-hot-toast";
+import { useOracleContract } from "./contracts";
 
 export const useVault = (): [
   () => Promise<string>,
@@ -15,9 +16,11 @@ export const useVault = (): [
   () => Promise<string>,
   () => Promise<string>,
   (amount: string) => Promise<void>,
-  (amount: string) => Promise<void>
+  (amount: string) => Promise<void>,
+  () => Promise<string>
 ] => {
   const vault = useVaultContract();
+  const oracle = useOracleContract();
   const { address, provider } = useActiveWeb3();
   const refresh = useForceUpdate();
   const balance = useCallback(async () => {
@@ -177,6 +180,28 @@ export const useVault = (): [
     [vault, address]
   );
 
+  const maxWithdraw = useCallback(async () => {
+    try {
+      //TODO simplify and  put in smartcontracts
+      const borrowed = await vault.borrowed(address);
+      const bal = await vault.balanceOf(address);
+      const colVal = await vault.getValueOfCollateral(bal);
+      const colFactor = await vault.COLATERALIZATION_FACTOR();
+      const feeDecimals = await vault.FEE_DECIMALS();
+      const ratio = borrowed.div(colFactor).mul(10 ** feeDecimals.toNumber());
+      const price = await vault.getLatestPrice();
+      const decimals = await oracle.decimals();
+      const maxAmount = colVal
+        .sub(ratio)
+        .mul(10 ** decimals)
+        .div(price);
+      return utils.formatEther(maxAmount);
+    } catch (e) {
+      console.log(e);
+      return "0";
+    }
+  }, [vault, address]);
+
   return [
     balance,
     allowance,
@@ -188,5 +213,6 @@ export const useVault = (): [
     borrowed,
     withdraw,
     payback,
+    maxWithdraw,
   ];
 };

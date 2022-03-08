@@ -65,8 +65,8 @@ contract BaseVault is Ownable {
             amount <= balanceOf[msg.sender],
             "Must be less than deposited"
         );
-        require(balanceOf[msg.sender].sub(amount) > 
-        getValueOfCollateral(balanceOf[msg.sender])
+        require(borrowed[msg.sender] <= 
+        getValueOfCollateral(balanceOf[msg.sender].sub(amount))
                 .mul(COLATERALIZATION_FACTOR)
                 .div(10**FEE_DECIMALS), "Too low of collateral");
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
