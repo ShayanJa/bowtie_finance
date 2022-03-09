@@ -41,13 +41,22 @@ describe("Vault", function () {
     const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
     ribbonVault = await RibbonVault.deploy(weth.address);
 
+    const STAKING = await ethers.getContractFactory("StakingRewards");
+    const staking = await STAKING.deploy(
+      sender.address,
+      sender.address,
+      weth.address,
+      weth.address
+    );
+
     const Vault = await ethers.getContractFactory("Vault");
     vault = await Vault.deploy(
       weth.address,
       rUsd.address,
       oracle.address,
-      ribbonVault.address,
-      weth.address
+      staking.address,
+      weth.address,
+      ribbonVault.address
     );
     await rUsd.transferOwnership(vault.address);
   });
@@ -83,9 +92,7 @@ describe("Vault", function () {
   // });
   it("should revert: Can't borrow total colalteral amount", async function () {
     initSnapshotId = await takeSnapshot();
-    console.log("hey");
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
-    console.log(maxAmount);
     await expect(vault.borrow(maxAmount)).to.be.revertedWith(
       "Borrowing too much"
     );
@@ -129,8 +136,6 @@ describe("Vault", function () {
     });
     it("only vault can withdraw tokens from subVault ", async function () {
       const amount = 100;
-      console.log(await subVault.owner());
-      console.log(sender.address);
       await vault.withdraw(amount);
     });
     // it("only vault can withdraw tokens from subVault ", async function () {
@@ -199,13 +204,22 @@ describe("UsdB", function () {
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
 
+    const STAKING = await ethers.getContractFactory("StakingRewards");
+    const staking = await STAKING.deploy(
+      sender.address,
+      sender.address,
+      weth.address,
+      weth.address
+    );
+
     const Vault = await ethers.getContractFactory("Vault");
     vault = await Vault.deploy(
       weth.address,
       usdb.address,
       oracle.address,
-      ribbonVault.address,
-      weth.address
+      staking.address,
+      weth.address,
+      ribbonVault.address
     );
   });
   it("should transfer ownership", async function () {

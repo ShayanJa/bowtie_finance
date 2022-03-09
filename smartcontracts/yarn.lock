@@ -7015,11 +7015,6 @@ open@^7.4.2:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"
 
-openzeppelin-solidity-2.3.0@^100.0.4:
-  version "100.0.4"
-  resolved "https://registry.yarnpkg.com/openzeppelin-solidity-2.3.0/-/openzeppelin-solidity-2.3.0-100.0.4.tgz#b2fb8126dba0488480fca9b69f30e242d8543de9"
-  integrity sha512-HVV2a+QrQ24sPSYNKg9Ck3LkJfQPsQ6AGetNJujFjEA3X+vD4Iz8M6h3z01WJ3mq2aPA/KJ1r2XOYw20NFziHA==
-
 optionator@^0.8.1, optionator@^0.8.2:
   version "0.8.3"
   resolved "https://registry.yarnpkg.com/optionator/-/optionator-0.8.3.tgz#84fa1d036fe9d3c7e21d99884b601167ec8fb495"
