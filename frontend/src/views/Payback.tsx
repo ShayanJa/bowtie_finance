@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { useActiveWeb3 } from "../state/application/hooks";
 import { useVault } from "../hooks/vault";
+import { useUSDB } from "../hooks/usdb";
 
 const Payback = () => {
-  const [bal, allowance, , , , , , , payback] = useVault();
+  const [, allowance, , , , , , , , payback] = useVault();
+  const [bal] = useUSDB();
   const [amount, setAmount] = useState("0");
   const [balance, setBalance] = useState("0");
 
@@ -37,7 +39,7 @@ const Payback = () => {
                         htmlFor="country"
                         className="pb-2 block text-xl font-medium text-white"
                       >
-                        USDB Balance: ${parseFloat(balance).toFixed(3)}
+                        USDB Balance: ${parseFloat(balance).toFixed(4)}
                       </label>
                       <input
                         id="token"
