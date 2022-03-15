@@ -71,12 +71,15 @@ contract Vault is BaseVault {
     function liquidate(address user) public override {
         SubVault subVault = SubVault(subVaults[user]);
         uint256 val = subVault.getValueInUnderlying();
-        require(getValueOfCollateral(val) < borrowed[user], "Collateral too low");
+        require(getValueOfCollateral(val)
+                .mul(COLATERALIZATION_FACTOR)
+                .div(FEE_DECIMALS) < borrowed[user], "Collateral too low");
         uint256 value = subVault.getValueInUnderlying();
         uint256 fee = getValueOfCollateral(value).mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
         borrowed[user] = 0;
+        
         owedLiquidations[msg.sender] = owedLiquidations[msg.sender].add(fee);
         OwnedSubvaults.push(subVault);
         subVaults[user] = SubVault(address(0));
