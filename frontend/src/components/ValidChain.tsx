@@ -10,7 +10,11 @@ const ValidChain = (props: any) => {
   if (chainId in ChainId) {
     return <div>{props.children}</div>;
   } else {
-    return <div>Unsupported chain</div>;
+    return (
+      <div className="text-3xl font-bold leading-tight text-white">
+        Unsupported chain
+      </div>
+    );
   }
 };
 

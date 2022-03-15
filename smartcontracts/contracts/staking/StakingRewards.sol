@@ -1,3 +1,4 @@
+// Modified from https://docs.synthetix.io/contracts/source/contracts/rewardsdistributionrecipient
 pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
