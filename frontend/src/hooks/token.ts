@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useActiveWeb3, useForceUpdate } from "../state/application/hooks";
+import { useActiveWeb3 } from "../state/application/hooks";
 import { useTokenContract } from "./contracts";
 import { ethers, utils } from "ethers";
 

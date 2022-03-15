@@ -20,7 +20,7 @@ contract BaseVault is Ownable {
     IStakingRewards public stakingRewards;
     IWETH immutable public WETH;
     
-    mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) private _balanceOf;
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
     
@@ -42,34 +42,38 @@ contract BaseVault is Ownable {
         stakingRewards = IStakingRewards(_stakingRewards);
         WETH = IWETH(_weth);
     }
+    
+    function balanceOf(address addr) public view virtual returns (uint256) {
+        return _balanceOf[addr];
+    }
 
-    function deposit(uint256 amount) public {
+    function deposit(uint256 amount) public virtual {
         collateral.transferFrom(msg.sender, address(this), amount);
         _deposit(amount);
     }
     
-    function depositETH() public payable{
+    function depositETH() public virtual payable{
         require(msg.value > 0, "!value");
         IWETH(WETH).deposit{value: msg.value}();
         _deposit(msg.value);
     }
-    function _deposit(uint256 amount) internal {
+    function _deposit(uint256 amount) internal virtual{
         uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
         collateral.transfer(address(stakingRewards), fee);
         stakingRewards.notifyRewardAmount(fee);
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount.sub(fee));
+        _balanceOf[msg.sender] = _balanceOf[msg.sender].add(amount.sub(fee));
     }
 
-    function withdraw(uint256 amount) public {
+    function withdraw(uint256 amount) public virtual {
         require(
-            amount <= balanceOf[msg.sender],
+            amount <= _balanceOf[msg.sender],
             "Must be less than deposited"
         );
         require(borrowed[msg.sender] <= 
-        getValueOfCollateral(balanceOf[msg.sender].sub(amount))
+        getValueOfCollateral(_balanceOf[msg.sender].sub(amount))
                 .mul(COLATERALIZATION_FACTOR)
                 .div(10**FEE_DECIMALS), "Too low of collateral");
-        balanceOf[msg.sender] = balanceOf[msg.sender].sub(amount);
+        _balanceOf[msg.sender] = _balanceOf[msg.sender].sub(amount);
         collateral.transfer(msg.sender, amount);
     }
 
@@ -118,14 +122,14 @@ contract BaseVault is Ownable {
         usdB.burn(msg.sender, amount);
     }
 
-    function maximumBorrowAmount(address user) public view returns (uint256) {
+    function maximumBorrowAmount(address user) public virtual view returns (uint256) {
         return
-            getValueOfCollateral(balanceOf[user])
+            getValueOfCollateral(_balanceOf[user])
                 .mul(COLATERALIZATION_FACTOR)
                 .div(10**FEE_DECIMALS);
     }
 
-    function getValueOfCollateral(uint256 amount) public view returns (uint256) {
+    function getValueOfCollateral(uint256 amount) public virtual view returns (uint256) {
         return amount.mul(getLatestPrice()).div(10**oracle.decimals());
     }
 
@@ -134,12 +138,12 @@ contract BaseVault is Ownable {
         return uint256(price);
     }
 
-    function liquidate(address user) public returns (bool) {
-        require(getValueOfCollateral(balanceOf[user]) < borrowed[user]);
-        uint256 fee = balanceOf[user].mul(LIQUIDATION_FEE).div(
+    function liquidate(address user) public virtual {
+        require(getValueOfCollateral(_balanceOf[user]) < borrowed[user]);
+        uint256 fee = _balanceOf[user].mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(fee);
-        balanceOf[user] = 0;
+        _balanceOf[msg.sender] = _balanceOf[msg.sender].add(fee);
+        _balanceOf[user] = 0;
     }
 }

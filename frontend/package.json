@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "yarn gen-sol && react-scripts build",
     "serve": "vite preview",
     "gen-sol": "typechain --target=ethers-v5 --out-dir src/contracts/generated 'src/contracts/abis/*.json'",
     "start": "react-scripts start"

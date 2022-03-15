@@ -60,7 +60,7 @@ const DepositWithdrawPage = () => {
                   Available to Withdraw
                 </dt>
                 <dd className="mt-1 text-2xl font-semibold text-white">
-                  {maxWithdraw} ETH
+                  {parseFloat(maxWithdraw).toFixed(5)} ETH
                 </dd>
               </div>
             </dl>

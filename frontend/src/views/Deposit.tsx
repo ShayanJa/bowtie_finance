@@ -26,7 +26,6 @@ const Deposit = () => {
   useEffect(() => {
     const setup = async () => {
       const allowed = await allowance();
-      console.log(allowed);
       setIsAllowed(allowed);
       const newPrice = await getPrice();
       setPrice(newPrice);
