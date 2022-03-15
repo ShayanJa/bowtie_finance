@@ -12,6 +12,7 @@ import { useSubscribe } from "./state/application/hooks";
 import FarmPage from "./views/Farm";
 import { Toaster } from "react-hot-toast";
 import { SubgraphDataContextProvider } from "./context/subgraphContext";
+import AuctionPage from './views/Auction'
 
 const App = () => {
   useSubscribe();
@@ -27,6 +28,7 @@ const App = () => {
               <Route path="/deposit" component={DepositWithdrawPage} />
               <Route path="/borrow" component={BorrowPaybackPage} />
               <Route path="/farm" component={FarmPage} />
+              <Route path="/auction" component={AuctionPage} />
               <Route>
                 <NotFound />
               </Route>

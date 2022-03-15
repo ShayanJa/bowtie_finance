@@ -15,6 +15,7 @@ const Nav = () => {
     { text: "Deposit", to: "/deposit" },
     { text: "Borrow", to: "/borrow" },
     { text: "Farm", to: "/farm" },
+    { text: "Auction", to: "/auction" },
   ]; 
 
   const activeClass = "text-white bg-gray-900";
