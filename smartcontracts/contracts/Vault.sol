@@ -81,7 +81,7 @@ contract Vault is BaseVault {
             getValueOfCollateral(val).mul(COLATERALIZATION_FACTOR).div(
                 FEE_DECIMALS
             ) < borrowed[user],
-            "Collateral too low"
+            "Collateral too High"
         );
         uint256 value = subVault.getValueInUnderlying();
         uint256 fee = getValueOfCollateral(value).mul(LIQUIDATION_FEE).div(
