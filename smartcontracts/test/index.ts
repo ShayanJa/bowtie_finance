@@ -25,7 +25,7 @@ describe("Vault", function () {
 
   before(async function () {
     [sender] = await ethers.getSigners();
-    const initialPrice = 9030883681;
+    const initialPrice = 277030883681;
     initialDeposit = BigNumber.from("10").pow(18);
     initialCollateralValue = initialDeposit.mul(initialPrice).div(1e8);
 
@@ -172,9 +172,10 @@ describe("Vault", function () {
       await vault.deposit(depositAmount);
       const maxAmount = await vault.maximumBorrowAmount(sender.address);
       await vault.borrow(maxAmount.sub(1));
-      await oracle.setPrice("27703088368");
+      await oracle.setPrice("207030883681");
       await vault.liquidate(sender.address);
-      // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+      expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+      expect(await vault.ownedSubvaults(0));
     });
   });
 });

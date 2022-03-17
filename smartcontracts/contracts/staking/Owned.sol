@@ -1,3 +1,4 @@
+// Modified from https://docs.synthetix.io/contracts/source/contracts/Owned 
 pragma solidity ^0.8.0;
 
 contract Owned {
