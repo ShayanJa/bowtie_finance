@@ -10,7 +10,7 @@ const About = () => {
             <div className="mt-10 mx-auto max-w-screen-2xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
                 <h2 className="text-6xl font-extrabold text-white sm:text-5xl sm:leading-none md:text-6xl">
-                  Options Backed Stablecoins
+                  Unlocking Options Liquidity
                 </h2>
                 <p className="py-6 text-slate-50 sm:mt-5 sm:text-2xl sm:max-w-xl sm:mx-auto md:mt-5 md:text-2xl lg:mx-0 text-white">
                   As capital becomes more fluid, any asset can be used as

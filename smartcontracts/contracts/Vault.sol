@@ -8,17 +8,27 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SubVault} from "./SubVault.sol";
 import {BaseVault} from "./base/Vault.sol";
 
+/// @title Vault
+/// @notice
+/// Uses BaseVault.sol
+/// - To simplify accounting, ribbon subvaults are created
+/// - Subvaults are owned by the Vault unless auctioned off then they are owned by the buyer
 contract Vault is BaseVault {
     using SafeMath for uint256;
 
     IRibbonThetaVault public stratVault;
 
     mapping(address => SubVault) public subVaults;
-    mapping(address => uint256) public owedLiquidations;
-    SubVault[] public ownedSubvaults;
-    uint256 public numOwnedSubvaults = 0;
+    Auction[] public auctions;
+    uint256 public numAuctions = 0;
 
     uint256 public constant DISCOUNTED_DEBT_FEE = 500;
+
+    struct Auction {
+        address liquidator;
+        uint256 debt;
+        SubVault subvault;
+    }
 
     constructor(
         address _collateral,
@@ -83,19 +93,25 @@ contract Vault is BaseVault {
             ) < borrowed[user],
             "Collateral too High"
         );
+        uint256 debt = borrowed[user];
         uint256 value = subVault.getValueInUnderlying();
         uint256 fee = getValueOfCollateral(value).mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
+        Auction memory auction = Auction(msg.sender, debt, subVault);
+        auctions.push(auction);
         borrowed[user] = 0;
 
-        owedLiquidations[msg.sender] = owedLiquidations[msg.sender].add(fee);
-        ownedSubvaults.push(subVault);
+        SubVault(subVaults[user]).initiateMaxWithdraw();
+
         subVaults[user] = SubVault(address(0));
-        numOwnedSubvaults += 1;
+
+        emit Liquidated(user, msg.sender, debt);
     }
 
-    function withdraw(uint256 amount) public override {
+    /// @notice Buys the auctioned off options collateral
+    /// @param amount Amount of Collateral to withdraw from subvault
+    function initiateWithdraw(uint256 amount) public {
         uint256 val = SubVault(subVaults[msg.sender]).getValueInUnderlying();
         require(
             borrowed[msg.sender] <=
@@ -107,22 +123,29 @@ contract Vault is BaseVault {
         SubVault(subVaults[msg.sender]).initiateWithdraw(amount);
     }
 
+    /// @notice Withdraw tokens from subvault
+    /// @param token Token to withdraw from subvault
+    /// @param amount Amount of Collaterall to withdraw from subvault
     function withdrawTokens(address token, uint256 amount) public onlyOwner {
+        SubVault subVault = subVaults[msg.sender];
+        subVault.withdrawTokens(token, amount);
         IERC20(token).transfer(owner(), amount);
     }
 
-    function buyDebt(address _subVault) public {
-        SubVault subVault = SubVault(_subVault);
+    /// @notice Buys the auctioned off options collateral
+    /// @dev Sender should have enough usdb
+    /// @param auctionId Name of the variable to set
+    function buyDebt(uint256 auctionId) public {
+        Auction memory auction = auctions[auctionId];
+        SubVault subVault = auction.subvault;
         uint256 val = subVault.getValueInUnderlying();
 
-        uint256 discountedCollateral = val.mul(DISCOUNTED_DEBT_FEE).div(
-            10**FEE_DECIMALS
-        );
-        collateral.transferFrom(
-            msg.sender,
-            address(this),
-            discountedCollateral
-        );
-        subVaults[msg.sender] = subVault;
+        uint256 discountedCollateral = val
+            .mul((10**FEE_DECIMALS).sub(DISCOUNTED_DEBT_FEE))
+            .div(10**FEE_DECIMALS);
+        usdB.transferFrom(msg.sender, address(this), discountedCollateral);
+        subVault.transferOwnership(msg.sender);
+        auctions[auctionId] = auctions[auctions.length - 1];
+        auctions.pop();
     }
 }

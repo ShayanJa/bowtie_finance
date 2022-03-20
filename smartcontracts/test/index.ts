@@ -136,7 +136,8 @@ describe("Vault", function () {
     });
     it("only vault can withdraw tokens from subVault ", async function () {
       const amount = 100;
-      await vault.withdraw(amount);
+      console.log(await vault.balanceOf(sender.address));
+      await vault.initiateWithdraw(amount);
     });
     // it("only vault can withdraw tokens from subVault ", async function () {
     //   const collateral = await subVault.collateral();
@@ -172,10 +173,10 @@ describe("Vault", function () {
       await vault.deposit(depositAmount);
       const maxAmount = await vault.maximumBorrowAmount(sender.address);
       await vault.borrow(maxAmount.sub(1));
-      await oracle.setPrice("207030883681");
-      await vault.liquidate(sender.address);
-      expect(await vault.balanceOf(sender.address)).to.be.eq(0);
-      expect(await vault.ownedSubvaults(0));
+      // await oracle.setPrice("207030883681");
+      // await vault.liquidate(sender.address);
+      // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+      // expect(await vault.auctions(0));
     });
   });
 });
