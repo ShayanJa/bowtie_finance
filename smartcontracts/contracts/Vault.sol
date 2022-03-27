@@ -105,9 +105,9 @@ contract Vault is BaseVault {
 
         subVault.initiateMaxWithdraw();
 
-        // subVaults[user] = SubVault(address(0));
+        subVaults[user] = SubVault(address(0));
 
-        // emit Liquidated(user, msg.sender, debt);
+        emit Liquidated(user, msg.sender, debt);
     }
 
     function withdraw(uint256 amount) public virtual override {
