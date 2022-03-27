@@ -71,7 +71,7 @@ contract Vault is BaseVault {
         uint256 val = SubVault(subVaults[user]).getValueInUnderlying();
         return
             getValueOfCollateral(val).mul(COLATERALIZATION_FACTOR).div(
-                FEE_DECIMALS
+                10**FEE_DECIMALS
             );
     }
 
@@ -89,7 +89,7 @@ contract Vault is BaseVault {
         uint256 val = subVault.getValueInUnderlying();
         require(
             getValueOfCollateral(val).mul(COLATERALIZATION_FACTOR).div(
-                FEE_DECIMALS
+                10**FEE_DECIMALS
             ) < borrowed[user],
             "Collateral too High"
         );
@@ -100,16 +100,22 @@ contract Vault is BaseVault {
         );
         Auction memory auction = Auction(msg.sender, debt, subVault);
         auctions.push(auction);
+        numAuctions += 1;
         borrowed[user] = 0;
 
-        SubVault(subVaults[user]).initiateMaxWithdraw();
+        subVault.initiateMaxWithdraw();
 
-        subVaults[user] = SubVault(address(0));
+        // subVaults[user] = SubVault(address(0));
 
-        emit Liquidated(user, msg.sender, debt);
+        // emit Liquidated(user, msg.sender, debt);
     }
 
-    /// @notice Buys the auctioned off options collateral
+    function withdraw(uint256 amount) public virtual override {
+        require(amount <= balanceOf(msg.sender), "Must be less than deposited");
+        initiateWithdraw(amount);
+    }
+
+    /// @notice Initiates withdraw of the collateral from ribbon
     /// @param amount Amount of Collateral to withdraw from subvault
     function initiateWithdraw(uint256 amount) public {
         uint256 val = SubVault(subVaults[msg.sender]).getValueInUnderlying();
@@ -147,5 +153,6 @@ contract Vault is BaseVault {
         subVault.transferOwnership(msg.sender);
         auctions[auctionId] = auctions[auctions.length - 1];
         auctions.pop();
+        numAuctions -= 1;
     }
 }

@@ -35,13 +35,14 @@ async function main() {
     weth.address
   );
 
-  const Vault = await ethers.getContractFactory("BaseVault");
+  const Vault = await ethers.getContractFactory("Vault");
   const vault = await Vault.deploy(
     weth.address,
     usdb.address,
     oracle.address,
     staking.address,
-    weth.address
+    weth.address,
+    ribbonVault.address
   );
 
   await vault.deployed();

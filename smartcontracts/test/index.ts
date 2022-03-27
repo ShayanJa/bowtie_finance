@@ -78,9 +78,11 @@ describe("Vault", function () {
     expect(afterMint).to.be.eq(initialDeposit);
   });
   it("should deposit tokens", async function () {
+    expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+
     await weth.approve(vault.address, initialDeposit);
     await vault.deposit(initialDeposit);
-    // expect(await vault.balanceOf(sender.address)).to.be.eq(initialDeposit);
+    expect(await vault.balanceOf(sender.address)).to.be.eq(initialDeposit);
     // expect(await weth.balanceOf(vault.address)).to.be.eq(0);
   });
 
@@ -173,10 +175,19 @@ describe("Vault", function () {
       await vault.deposit(depositAmount);
       const maxAmount = await vault.maximumBorrowAmount(sender.address);
       await vault.borrow(maxAmount.sub(1));
-      // await oracle.setPrice("207030883681");
-      // await vault.liquidate(sender.address);
-      // expect(await vault.balanceOf(sender.address)).to.be.eq(0);
-      // expect(await vault.auctions(0));
+
+      await oracle.setPrice("27703088368");
+      const maxAmount2 = await vault.maximumBorrowAmount(sender.address);
+      await vault.liquidate(sender.address);
+      const numAuctions = await vault.numAuctions();
+      expect(numAuctions).to.be.eq(1);
+      const auction = await vault.auctions(numAuctions.sub(1));
+      // const subVaultAddress = await vault.subVaults(auction.subvault);
+
+      // let subVault = await ethers.getContractAt("SubVault", subVaultAddress);
+      // const val = await subVault.getValueInUnderlying();
+      // await vault.getValueOfCollateral(val);
+      console.log(auction);
     });
   });
 });

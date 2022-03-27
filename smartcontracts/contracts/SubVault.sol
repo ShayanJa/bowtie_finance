@@ -28,10 +28,16 @@ contract SubVault is Ownable {
     }
 
     function getValueInUnderlying() public view returns (uint256) {
-        // (,uint104 amount,) = stratVault.depositReceipts(address(this));
+        (uint16 curRound, , , , ) = stratVault.vaultState();
+        (uint16 round, uint104 amount, ) = stratVault.depositReceipts(
+            address(this)
+        );
         uint256 accValue = stratVault.accountVaultBalance(address(this));
-        // return  accValue.add(uint256(amount));
-        return accValue;
+        if (curRound >= round) {
+            return accValue;
+        } else {
+            return accValue.add(uint256(amount));
+        }
     }
 
     function getLiquidValueInUnderlying(address subVault)
@@ -49,8 +55,7 @@ contract SubVault is Ownable {
     }
 
     function initiateMaxWithdraw() public onlyOwner {
-        uint256 heldByVault = stratVault.shares(address(this));
-        stratVault.initiateWithdraw(heldByVault);
+        stratVault.initiateMaxWithdraw();
     }
 
     function completeWithdrawl() public onlyOwner {
