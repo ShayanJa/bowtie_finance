@@ -9,13 +9,16 @@ import {
   WETH9,
   Vault,
   SubVault,
+  BowTie,
 } from "../typechain";
 
 describe("Vault", function () {
   let sender: SignerWithAddress;
+  let debtBuyer: SignerWithAddress;
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
-  let rUsd: MockUSD;
+  let usdb: MockUSD;
+  let bowtie: BowTie;
   let weth: WETH9;
   let vault: Vault;
   let initSnapshotId: string;
@@ -23,8 +26,10 @@ describe("Vault", function () {
   let initialDeposit: BigNumber;
   let initialCollateralValue: BigNumber;
 
+  let liquidatedVaultAddress: string;
+
   before(async function () {
-    [sender] = await ethers.getSigners();
+    [sender, debtBuyer] = await ethers.getSigners();
     const initialPrice = 277030883681;
     initialDeposit = BigNumber.from("10").pow(18);
     initialCollateralValue = initialDeposit.mul(initialPrice).div(1e8);
@@ -32,8 +37,11 @@ describe("Vault", function () {
     const Oracle = await ethers.getContractFactory("MockOracle");
     oracle = await Oracle.deploy(initialPrice);
 
-    const RUSD = await ethers.getContractFactory("MockUSD");
-    rUsd = await RUSD.deploy();
+    const USDB = await ethers.getContractFactory("MockUSD");
+    usdb = await USDB.deploy();
+
+    const Bowtie = await ethers.getContractFactory("BowTie");
+    bowtie = await Bowtie.deploy();
 
     const WETH = await ethers.getContractFactory("WETH9");
     weth = await WETH.deploy();
@@ -49,16 +57,25 @@ describe("Vault", function () {
       weth.address
     );
 
+    const bowtieStaking = await STAKING.deploy(
+      sender.address,
+      sender.address,
+      usdb.address,
+      bowtie.address
+    );
+
     const Vault = await ethers.getContractFactory("Vault");
     vault = await Vault.deploy(
       weth.address,
-      rUsd.address,
+      usdb.address,
       oracle.address,
       staking.address,
       weth.address,
+      bowtie.address,
+      bowtieStaking.address,
       ribbonVault.address
     );
-    await rUsd.transferOwnership(vault.address);
+    await usdb.transferOwnership(vault.address);
   });
 
   it("should deposit ETH", async function () {
@@ -66,9 +83,11 @@ describe("Vault", function () {
     await weth.approve(vault.address, initialDeposit);
     await vault.depositETH({ value: initialDeposit });
     const bal = await vault.balanceOf(sender.address);
-    console.log(bal);
-    // expect(await weth.balanceOf(vault.address)).to.be.eq(0);
-    // expect(await weth.balanceOf(vault.address)).to.be.eq(0);
+    const subVaultAddress = await vault.subVaults(sender.address);
+    const subVault = await ethers.getContractAt("SubVault", subVaultAddress);
+    const reciept = await ribbonVault.depositReceipts(subVault.address);
+    expect(reciept.amount).to.be.eq(bal);
+    expect(bal).to.be.eq(initialDeposit);
 
     revertToSnapShot(initSnapshotId);
   });
@@ -83,35 +102,34 @@ describe("Vault", function () {
     await weth.approve(vault.address, initialDeposit);
     await vault.deposit(initialDeposit);
     expect(await vault.balanceOf(sender.address)).to.be.eq(initialDeposit);
-    // expect(await weth.balanceOf(vault.address)).to.be.eq(0);
   });
 
-  // it("should have proper value of colatteral", async function () {
-  //   const balance = await vault.balanceOf(sender.address);
-  //   expect(await vault.getValueOfCollateral(balance.toString())).to.eq(
-  //     initialCollateralValue
-  //   );
-  // });
+  it("should have proper value of colatteral", async function () {
+    const balance = await vault.balanceOf(sender.address);
+    expect(await vault.getValueOfCollateral(balance.toString())).to.eq(
+      initialCollateralValue
+    );
+  });
   it("should revert: Can't borrow total colalteral amount", async function () {
     initSnapshotId = await takeSnapshot();
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await expect(vault.borrow(maxAmount)).to.be.revertedWith(
       "Borrowing too much"
     );
-    // expect(await rUsd.balanceOf(sender.address)).to.be.eq(0);
+    expect(await usdb.balanceOf(sender.address)).to.be.eq(0);
     revertToSnapShot(initSnapshotId);
   });
   it("should borrow up to max sub 1", async function () {
     initSnapshotId = await takeSnapshot();
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));
-    // expect(await rUsd.balanceOf(sender.address)).to.be.eq(maxAmount.sub(1));
+    expect(await usdb.balanceOf(sender.address)).to.be.eq(maxAmount.sub(1));
     revertToSnapShot(initSnapshotId);
   });
   it("should borrow correct value", async function () {
     const depositAmount = 1e8;
     await vault.borrow(depositAmount);
-    // expect(await rUsd.balanceOf(sender.address)).to.be.eq(depositAmount);
+    expect(await usdb.balanceOf(sender.address)).to.be.eq(depositAmount);
   });
   it("should not allow liquidation under the max amount", async function () {
     await expect(vault.liquidate(sender.address)).to.be.reverted;
@@ -120,8 +138,12 @@ describe("Vault", function () {
   describe("Sub Vault", () => {
     let subVault: SubVault;
     before(async function () {
+      initSnapshotId = await takeSnapshot();
       const subVaultAddress = await vault.subVaults(sender.address);
       subVault = await ethers.getContractAt("SubVault", subVaultAddress);
+    });
+    after(async () => {
+      revertToSnapShot(initSnapshotId);
     });
 
     it("should have vault as owner", async () => {
@@ -132,27 +154,24 @@ describe("Vault", function () {
       await expect(subVault.initiateWithdraw(amount)).to.be.reverted;
     });
     it("should revert: only owner allowed to withdraw tokeens", async function () {
-      const collateral = await subVault.collateral();
       const amount = 100;
-      await expect(subVault.withdrawTokens(collateral, amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
     });
     it("only vault can withdraw tokens from subVault ", async function () {
       const amount = 100;
       console.log(await vault.balanceOf(sender.address));
       await vault.initiateWithdraw(amount);
     });
-    // it("only vault can withdraw tokens from subVault ", async function () {
-    //   const collateral = await subVault.collateral();
-    //   const amount = 100;
-    //   await vault.withdraw(amount);
-    //   await vault.withdrawTokens(collateral, amount);
-    // });
+    it("only vault can withdraw tokens from subVault ", async function () {
+      const amount = 100;
+      await vault.withdraw(amount);
+      await vault.withdrawTokens(amount);
+    });
 
-    // it("should revert: only msg.sender and liquidator can access subVault", async function () {
-    //   const collateral = await subVault.collateral();
-    //   const amount = 100;
-    //   await expect(subVault.withdrawTokens(collateral, amount)).to.be.reverted;
-    // });
+    it("should revert: only msg.sender and liquidator can access subVault", async function () {
+      const amount = 100;
+      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+    });
   });
 
   describe("cleanup", () => {
@@ -160,13 +179,16 @@ describe("Vault", function () {
       const depositAmount = 1e8;
       await vault.repay(depositAmount);
       // expect(await rUsd.balanceOf(sender.address)).to.be.eq(0);
-      expect(await rUsd.totalSupply()).to.be.eq(0);
+      expect(await usdb.totalSupply()).to.be.eq(0);
     });
-    // it("should withdraw all tokens", async function () {
-    //   const amount = await vault.balanceOf(sender.address);
-    //   await vault.withdraw(amount);
-    //   expect(await vault.balanceOf(sender.address)).to.be.eq(0);
-    // });
+
+    it("should withdraw all tokens", async function () {
+      initSnapshotId = await takeSnapshot();
+      const amount = await vault.balanceOf(sender.address);
+      await vault.withdraw(amount);
+      expect(await vault.balanceOf(sender.address)).to.be.eq(0);
+      revertToSnapShot(initSnapshotId);
+    });
 
     it("should liquidate", async function () {
       const depositAmount = 1e8;
@@ -182,12 +204,42 @@ describe("Vault", function () {
       const numAuctions = await vault.numAuctions();
       expect(numAuctions).to.be.eq(1);
       const auction = await vault.auctions(numAuctions.sub(1));
-      // const subVaultAddress = await vault.subVaults(auction.subvault);
-
-      // let subVault = await ethers.getContractAt("SubVault", subVaultAddress);
-      // const val = await subVault.getValueInUnderlying();
-      // await vault.getValueOfCollateral(val);
+      console.log(await vault.subVaults(sender.address));
+      expect(await vault.subVaults(sender.address)).to.be.eq(
+        "0x0000000000000000000000000000000000000000"
+      );
+      await expect(vault.initiateWithdraw(1)).to.be.reverted;
       console.log(auction);
+    });
+    it("should buy debt", async () => {
+      const subVaultAddress = await vault.subVaults(debtBuyer.address);
+      console.log(subVaultAddress);
+      expect(subVaultAddress).to.be.eq(
+        "0x0000000000000000000000000000000000000000"
+      );
+      const numAuctions = await vault.numAuctions();
+      const auction = await vault.auctions(numAuctions.sub(1));
+      const usdbVal = auction.price;
+      const subVaultBond = auction.subVault;
+      liquidatedVaultAddress = auction.subVault;
+      const subVault = await ethers.getContractAt("SubVault", subVaultBond);
+      await vault
+        .connect(debtBuyer)
+        .depositETH({ value: initialDeposit.mul(2) });
+      await vault.connect(debtBuyer).borrow(usdbVal);
+      await usdb.connect(debtBuyer).approve(vault.address, usdbVal);
+      await vault.connect(debtBuyer).buyDebt(0);
+      const newNumAuctions = await vault.numAuctions();
+      expect(newNumAuctions).to.be.eq(0);
+      expect(await subVault.owner()).to.be.eq(debtBuyer.address);
+    });
+    it("should allow token withdraw", async () => {
+      const subVault = await ethers.getContractAt(
+        "SubVault",
+        liquidatedVaultAddress
+      );
+      const bal = await subVault.getValueInUnderlying();
+      await subVault.connect(debtBuyer).withdrawInstantly(bal);
     });
   });
 });
@@ -198,6 +250,7 @@ describe("UsdB", function () {
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let bowtie: BowTie;
   let vault: Vault;
   let weth: WETH9;
 
@@ -217,12 +270,22 @@ describe("UsdB", function () {
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
 
+    const Bowtie = await ethers.getContractFactory("BowTie");
+    bowtie = await Bowtie.deploy();
+
     const STAKING = await ethers.getContractFactory("StakingRewards");
     const staking = await STAKING.deploy(
       sender.address,
       sender.address,
       weth.address,
       weth.address
+    );
+
+    const bowtieStaking = await STAKING.deploy(
+      sender.address,
+      sender.address,
+      usdb.address,
+      bowtie.address
     );
 
     const Vault = await ethers.getContractFactory("Vault");
@@ -232,6 +295,8 @@ describe("UsdB", function () {
       oracle.address,
       staking.address,
       weth.address,
+      bowtie.address,
+      bowtieStaking.address,
       ribbonVault.address
     );
   });

@@ -7,6 +7,8 @@ import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SubVault} from "./SubVault.sol";
 import {BaseVault} from "./base/Vault.sol";
+import {BowTie} from "./BowTie.sol";
+import {IStakingRewards} from "./interfaces/IStakingRewards.sol";
 
 /// @title Vault
 /// @notice
@@ -17,17 +19,23 @@ contract Vault is BaseVault {
     using SafeMath for uint256;
 
     IRibbonThetaVault public stratVault;
+    BowTie public bowtie;
+    IStakingRewards public bowtieStaking;
 
     mapping(address => SubVault) public subVaults;
     Auction[] public auctions;
     uint256 public numAuctions = 0;
 
     uint256 public constant DISCOUNTED_DEBT_FEE = 500;
+    uint256 public LP_PERCENT = 0;
+    uint256 public INSURANCE_PERCENT = 10000;
+    uint256 public CUTOFF = 11000;
 
     struct Auction {
         address liquidator;
         uint256 debt;
-        SubVault subvault;
+        uint256 price;
+        SubVault subVault;
     }
 
     constructor(
@@ -36,9 +44,13 @@ contract Vault is BaseVault {
         address _oracle,
         address _stakingRewards,
         address _weth,
+        address _bowtie,
+        address _bowtieStaking,
         address _stratVault
     ) BaseVault(_collateral, _usdB, _oracle, _stakingRewards, _weth) {
         stratVault = IRibbonThetaVault(_stratVault);
+        bowtie = BowTie(_bowtie);
+        bowtieStaking = IStakingRewards(_bowtieStaking);
     }
 
     function balanceOf(address addr) public view override returns (uint256) {
@@ -98,24 +110,39 @@ contract Vault is BaseVault {
         uint256 fee = getValueOfCollateral(value).mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        Auction memory auction = Auction(msg.sender, debt, subVault);
+        uint256 price = debt
+            .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
+            .div(10**FEE_DECIMALS);
+
+        Auction memory auction = Auction(msg.sender, debt, price, subVault);
         auctions.push(auction);
         numAuctions += 1;
         borrowed[user] = 0;
 
-        subVault.initiateMaxWithdraw();
+        subVault.withdrawAll();
 
         subVaults[user] = SubVault(address(0));
 
         emit Liquidated(user, msg.sender, debt);
     }
 
+    /// @notice Withdraw tokens from subvault
+    /// @param amount Amount of Collaterall to withdraw from subvault
     function withdraw(uint256 amount) public virtual override {
         require(amount <= balanceOf(msg.sender), "Must be less than deposited");
-        initiateWithdraw(amount);
+        SubVault subVault = SubVault(subVaults[msg.sender]);
+        subVault.withdrawInstantly(amount);
+    }
+
+    function withdrawInstantly(uint256 amount) public {
+        require(amount <= balanceOf(msg.sender), "Must be less than deposited");
+        SubVault subVault = SubVault(subVaults[msg.sender]);
+        subVault.withdrawInstantly(amount);
     }
 
     /// @notice Initiates withdraw of the collateral from ribbon
+    /// If the collateral is being used in an option it will be processed
+    /// by ribbon at option expiry
     /// @param amount Amount of Collateral to withdraw from subvault
     function initiateWithdraw(uint256 amount) public {
         uint256 val = SubVault(subVaults[msg.sender]).getValueInUnderlying();
@@ -130,12 +157,11 @@ contract Vault is BaseVault {
     }
 
     /// @notice Withdraw tokens from subvault
-    /// @param token Token to withdraw from subvault
     /// @param amount Amount of Collaterall to withdraw from subvault
-    function withdrawTokens(address token, uint256 amount) public onlyOwner {
+    function withdrawTokens(uint256 amount) public {
         SubVault subVault = subVaults[msg.sender];
-        subVault.withdrawTokens(token, amount);
-        IERC20(token).transfer(owner(), amount);
+        subVault.withdrawTokens(amount);
+        collateral.transfer(owner(), amount);
     }
 
     /// @notice Buys the auctioned off options collateral
@@ -143,16 +169,48 @@ contract Vault is BaseVault {
     /// @param auctionId Name of the variable to set
     function buyDebt(uint256 auctionId) public {
         Auction memory auction = auctions[auctionId];
-        SubVault subVault = auction.subvault;
-        uint256 val = subVault.getValueInUnderlying();
+        uint256 underlying = auction.subVault.getValueInUnderlying();
+        uint256 curValue = getValueOfCollateral(underlying);
 
-        uint256 discountedCollateral = val
-            .mul((10**FEE_DECIMALS).sub(DISCOUNTED_DEBT_FEE))
+        uint256 discountedCollateral = auction
+            .debt
+            .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
             .div(10**FEE_DECIMALS);
-        usdB.transferFrom(msg.sender, address(this), discountedCollateral);
-        subVault.transferOwnership(msg.sender);
+        // uint256 cutoffPrice = auction.debt.mul(CUTOFF).div(10**FEE_DECIMALS);
+
         auctions[auctionId] = auctions[auctions.length - 1];
         auctions.pop();
         numAuctions -= 1;
+
+        if (curValue > discountedCollateral) {
+            //todo
+            usdB.transferFrom(msg.sender, address(this), discountedCollateral);
+            uint256 insuranceFee = auction.debt.mul(INSURANCE_PERCENT).div(
+                10**FEE_DECIMALS
+            );
+            usdB.transfer(address(bowtieStaking), insuranceFee);
+            bowtieStaking.notifyRewardAmount(insuranceFee);
+            // } else if (discountedCollateral > curValue && curValue > auction.debt) {
+            //     //todo
+            //     continue
+            // } else if (curValue < auction.debt) {
+            //     //TODO
+            //     //mint bowties
+            //     continue
+            // } else {
+        } else {
+            usdB.transferFrom(msg.sender, address(this), discountedCollateral);
+        }
+
+        // usdB.transferFrom(msg.sender, address(this), discountedCollateral);
+
+        auction.subVault.transferOwnership(msg.sender);
+    }
+
+    function rolloverBadDebt() public onlyOwner {
+        for (uint256 i = 0; i < auctions.length; i++) {
+            Auction memory auction = auctions[i];
+            //todo Sell all bonds
+        }
     }
 }

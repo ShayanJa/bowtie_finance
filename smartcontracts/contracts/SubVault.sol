@@ -33,7 +33,7 @@ contract SubVault is Ownable {
             address(this)
         );
         uint256 accValue = stratVault.accountVaultBalance(address(this));
-        if (curRound >= round) {
+        if (curRound > round) {
             return accValue;
         } else {
             return accValue.add(uint256(amount));
@@ -54,15 +54,55 @@ contract SubVault is Ownable {
         stratVault.initiateWithdraw(amount);
     }
 
+    function withdrawInstantly(uint256 amount) public onlyOwner {
+        stratVault.withdrawInstantly(amount);
+    }
+
     function initiateMaxWithdraw() public onlyOwner {
-        stratVault.initiateMaxWithdraw();
+        uint256 shares = stratVault.shares(msg.sender);
+        stratVault.initiateWithdraw(shares);
     }
 
-    function completeWithdrawl() public onlyOwner {
-        stratVault.completeWithdraw();
+    // function withdraw(uint256 amount) public onlyOwner {
+    //     require(amount > 0, "!amount");
+    //     uint256 shares = stratVault.shares(address(this));
+    //     (, uint104 depositAmount, ) = stratVault.depositReceipts(address(this));
+    //     require(
+    //         amount <= shares.add(uint256(depositAmount)),
+    //         "Not enough coin"
+    //     );
+    //     if (amount > 0 && depositAmount > 0) {
+    //         stratVault.withdrawInstantly(amount);
+
+    //         if (depositAmount >= amount) {
+    //             stratVault.withdrawInstantly(amount);
+    //         } else {
+    //             stratVault.withdrawInstantly(uint256(depositAmount));
+    //             uint256 left = amount.sub(depositAmount);
+    //             if (shares > 0 && shares > left) {
+    //                 stratVault.initiateWithdraw(left);
+    //             }
+    //         }
+    //     }
+    // }
+
+    function withdraw(uint256 amount) public onlyOwner {
+        require(amount > 0, "!amount");
+        initiateWithdraw(amount);
     }
 
-    function withdrawTokens(address token, uint256 amount) public onlyOwner {
-        IERC20(token).transfer(owner(), amount);
+    function withdrawAll() public {
+        (, uint104 amount, uint128 unredeemedShares) = stratVault
+            .depositReceipts(msg.sender);
+        if (amount > 0) {
+            stratVault.withdrawInstantly(amount);
+        }
+        if (unredeemedShares > 0) {
+            initiateMaxWithdraw();
+        }
+    }
+
+    function withdrawTokens(uint256 amount) public onlyOwner {
+        collateral.transfer(owner(), amount);
     }
 }

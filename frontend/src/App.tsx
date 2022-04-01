@@ -12,12 +12,13 @@ import { useSubscribe } from "./state/application/hooks";
 import FarmPage from "./views/Farm";
 import { Toaster } from "react-hot-toast";
 import { SubgraphDataContextProvider } from "./context/subgraphContext";
-import AuctionPage from './views/Auction'
+import AuctionPage from "./views/Auction";
 
 const App = () => {
   useSubscribe();
+
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-r from-gray-900 via-purple-900 to-pink-900">
+    <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-r from-gray-900 via-purple-900 to-purple-900">
       <SubgraphDataContextProvider>
         <Router>
           <ValidChain>

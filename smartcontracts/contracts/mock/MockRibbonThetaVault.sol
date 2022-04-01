@@ -3,8 +3,11 @@ pragma solidity ^0.8.0;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract MockRibbonThetaVault is ERC20, Ownable {
+    using SafeMath for uint256;
+
     IERC20 public asset;
 
     mapping(address => uint256) public mockAccountBalance;
@@ -58,6 +61,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
             amount: uint104(amount),
             unredeemedShares: uint128(0)
         });
+        mockAccountBalance[creditor] = amount;
     }
 
     function deposit(uint256 amount) public {
@@ -65,13 +69,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     }
 
     function accountVaultBalance(address acct) public view returns (uint256) {
-        DepositReceipt memory receipt = depositReceipts[acct];
-        return uint256(receipt.amount);
-    }
-
-    function initiateMaxWithdraw() external {
-        uint256 val = accountVaultBalance(msg.sender);
-        asset.transfer(msg.sender, val); //TODO: fix up
+        return 0;
     }
 
     function initiateWithdraw(uint256 numShares) external {
@@ -80,6 +78,14 @@ contract MockRibbonThetaVault is ERC20, Ownable {
 
     function shares(address account) public view returns (uint256) {
         return mockAccountBalance[account];
+    }
+
+    function withdrawInstantly(uint256 share) external {
+        DepositReceipt storage depositReceipt = depositReceipts[msg.sender];
+        uint256 receiptAmount = depositReceipt.amount;
+
+        depositReceipt.amount = uint104(receiptAmount.sub(share));
+        asset.transfer(msg.sender, share);
     }
 
     function vaultState()

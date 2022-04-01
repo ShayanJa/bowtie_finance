@@ -24,13 +24,15 @@ contract BaseVault is Ownable {
     mapping(address => uint256) public borrowed;
     mapping(address => bool) public allowedStables;
 
-    uint256 public constant LIQUIDATION_FEE = 500;
+    uint256 public constant LIQUIDATION_FEE = 100;
     uint256 public constant DEPOSIT_FEE = 100;
     uint256 public constant COLATERALIZATION_FACTOR = 8000;
     uint256 public constant FEE_DECIMALS = 4;
 
     /// ======== Events ======== ///
     event Liquidated(address user, address liquidator, uint256 debt);
+    event Deposited(address user, address subVault, uint256 amount);
+    event Withdraw(address user, address subVault, uint256 amount);
 
     constructor(
         address _collateral,
@@ -84,8 +86,11 @@ contract BaseVault is Ownable {
         collateral.transfer(msg.sender, amount);
     }
 
-    function borrow(uint256 amount) public {
-        require(amount < maximumBorrowAmount(msg.sender), "Borrowing too much");
+    function borrow(uint256 amount) public virtual {
+        require(
+            borrowed[msg.sender].add(amount) < maximumBorrowAmount(msg.sender),
+            "Borrowing too much"
+        );
         borrowed[msg.sender] = borrowed[msg.sender].add(amount);
         usdB.mint(msg.sender, amount);
     }
