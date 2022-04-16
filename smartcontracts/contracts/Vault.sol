@@ -26,7 +26,7 @@ contract Vault is BaseVault {
     Auction[] public auctions;
     uint256 public numAuctions = 0;
 
-    uint256 public constant DISCOUNTED_DEBT_FEE = 500;
+    uint256 public DISCOUNTED_DEBT_FEE = 500;
     uint256 public LP_PERCENT = 0;
     uint256 public INSURANCE_PERCENT = 10000;
     uint256 public CUTOFF = 11000;
@@ -176,33 +176,19 @@ contract Vault is BaseVault {
             .debt
             .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
             .div(10**FEE_DECIMALS);
-        // uint256 cutoffPrice = auction.debt.mul(CUTOFF).div(10**FEE_DECIMALS);
+
+        // require(curValue > discountedCollateral, "Collateral Value too low");
 
         auctions[auctionId] = auctions[auctions.length - 1];
         auctions.pop();
         numAuctions -= 1;
 
-        if (curValue > discountedCollateral) {
-            //todo
-            usdB.transferFrom(msg.sender, address(this), discountedCollateral);
-            uint256 insuranceFee = auction.debt.mul(INSURANCE_PERCENT).div(
-                10**FEE_DECIMALS
-            );
-            usdB.transfer(address(bowtieStaking), insuranceFee);
-            bowtieStaking.notifyRewardAmount(insuranceFee);
-            // } else if (discountedCollateral > curValue && curValue > auction.debt) {
-            //     //todo
-            //     continue
-            // } else if (curValue < auction.debt) {
-            //     //TODO
-            //     //mint bowties
-            //     continue
-            // } else {
-        } else {
-            usdB.transferFrom(msg.sender, address(this), discountedCollateral);
-        }
-
-        // usdB.transferFrom(msg.sender, address(this), discountedCollateral);
+        usdB.transferFrom(msg.sender, address(this), discountedCollateral);
+        uint256 insuranceFee = auction.debt.mul(INSURANCE_PERCENT).div(
+            10**FEE_DECIMALS
+        );
+        usdB.transfer(address(bowtieStaking), insuranceFee);
+        bowtieStaking.notifyRewardAmount(insuranceFee);
 
         auction.subVault.transferOwnership(msg.sender);
     }

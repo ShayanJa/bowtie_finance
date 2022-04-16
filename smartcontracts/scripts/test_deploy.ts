@@ -22,7 +22,7 @@ async function main() {
   const RUSD = await ethers.getContractFactory("MockUSD");
   const rUsd = await RUSD.deploy();
 
-  const Vault = await ethers.getContractFactory("Vault");
+  const Vault = await ethers.getContractFactory("BaseVault");
   const vault = await Vault.deploy(
     weth.address,
     rUsd.address,

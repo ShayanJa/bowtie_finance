@@ -9,15 +9,19 @@ async function main() {
   const [sender] = await ethers.getSigners();
   const testAddress = "0x30106e56b179c62bD0972DdEd25bD86cB2fa3d88";
 
-  // const oracle = await ethers.getContractAt(
-  //   "AggregatorV3Interface",
-  //   "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419"
-  // );
+  const oracle = await ethers.getContractAt(
+    "AggregatorV3Interface",
+    "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419"
+  );
 
-  const initialPrice = 277030883681;
-
-  const Oracle = await ethers.getContractFactory("MockOracle");
-  const oracle = await Oracle.deploy(initialPrice);
+  /*
+  // TEST: liquidations by updating oracle price
+  //
+  // const initialPrice = 277030883681;
+  //
+  // const Oracle = await ethers.getContractFactory("MockOracle");
+  // const oracle = await Oracle.deploy(initialPrice);
+  */
 
   const weth = await ethers.getContractAt(
     "WETH9",

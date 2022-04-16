@@ -40,16 +40,6 @@ contract SubVault is Ownable {
         }
     }
 
-    function getLiquidValueInUnderlying(address subVault)
-        public
-        view
-        returns (uint256)
-    {
-        (, uint104 amount, uint128 unredeemedShares) = stratVault
-            .depositReceipts(address(this));
-        return uint256(amount).add(uint256(unredeemedShares));
-    }
-
     function initiateWithdraw(uint256 amount) public onlyOwner {
         stratVault.initiateWithdraw(amount);
     }
@@ -62,29 +52,6 @@ contract SubVault is Ownable {
         uint256 shares = stratVault.shares(msg.sender);
         stratVault.initiateWithdraw(shares);
     }
-
-    // function withdraw(uint256 amount) public onlyOwner {
-    //     require(amount > 0, "!amount");
-    //     uint256 shares = stratVault.shares(address(this));
-    //     (, uint104 depositAmount, ) = stratVault.depositReceipts(address(this));
-    //     require(
-    //         amount <= shares.add(uint256(depositAmount)),
-    //         "Not enough coin"
-    //     );
-    //     if (amount > 0 && depositAmount > 0) {
-    //         stratVault.withdrawInstantly(amount);
-
-    //         if (depositAmount >= amount) {
-    //             stratVault.withdrawInstantly(amount);
-    //         } else {
-    //             stratVault.withdrawInstantly(uint256(depositAmount));
-    //             uint256 left = amount.sub(depositAmount);
-    //             if (shares > 0 && shares > left) {
-    //                 stratVault.initiateWithdraw(left);
-    //             }
-    //         }
-    //     }
-    // }
 
     function withdraw(uint256 amount) public onlyOwner {
         require(amount > 0, "!amount");

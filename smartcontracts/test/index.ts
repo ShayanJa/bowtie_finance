@@ -76,6 +76,8 @@ describe("Vault", function () {
       ribbonVault.address
     );
     await usdb.transferOwnership(vault.address);
+    await staking.setRewardsDistribution(vault.address);
+    await bowtieStaking.setRewardsDistribution(vault.address);
   });
 
   it("should deposit ETH", async function () {
@@ -199,7 +201,6 @@ describe("Vault", function () {
       await vault.borrow(maxAmount.sub(1));
 
       await oracle.setPrice("27703088368");
-      const maxAmount2 = await vault.maximumBorrowAmount(sender.address);
       await vault.liquidate(sender.address);
       const numAuctions = await vault.numAuctions();
       expect(numAuctions).to.be.eq(1);
@@ -229,6 +230,7 @@ describe("Vault", function () {
       await vault.connect(debtBuyer).borrow(usdbVal);
       await usdb.connect(debtBuyer).approve(vault.address, usdbVal);
       await vault.connect(debtBuyer).buyDebt(0);
+
       const newNumAuctions = await vault.numAuctions();
       expect(newNumAuctions).to.be.eq(0);
       expect(await subVault.owner()).to.be.eq(debtBuyer.address);
@@ -299,6 +301,8 @@ describe("UsdB", function () {
       bowtieStaking.address,
       ribbonVault.address
     );
+    await staking.setRewardsDistribution(vault.address);
+    await bowtieStaking.setRewardsDistribution(vault.address);
   });
   it("should transfer ownership", async function () {
     await usdb.transferOwnership(vault.address);

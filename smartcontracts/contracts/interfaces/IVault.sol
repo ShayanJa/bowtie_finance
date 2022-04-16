@@ -12,4 +12,8 @@ interface IVault {
     function repay(uint256 amount) external returns (uint256);
 
     function liquidate(address user) external returns (uint256);
+    
+    function getValueOfCollateral(uint256 amount) external view returns (uint256);
+    
+    function getLatestPrice() external view returns (uint256);
 }

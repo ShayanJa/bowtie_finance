@@ -7,7 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice
 /// Debt based token backed by collateral
 contract UsdB is ERC20, Ownable {
-    constructor() ERC20("Ribbon USD", "rUSD") {}
+    constructor() ERC20("Bowtie USD", "USDB") {}
 
     function mint(address receiver, uint256 amount) public onlyOwner {
         _mint(receiver, amount);
