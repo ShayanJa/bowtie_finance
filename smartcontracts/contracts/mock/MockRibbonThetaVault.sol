@@ -11,6 +11,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     IERC20 public asset;
 
     mapping(address => uint256) public mockAccountBalance;
+    mapping(address => uint256) public withdrawls;
 
     struct DepositReceipt {
         // Maximum of 65535 rounds. Assuming 1 round is 7 days, maximum is 1256 years.
@@ -73,7 +74,13 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     }
 
     function initiateWithdraw(uint256 numShares) external {
-        asset.transfer(msg.sender, numShares); //TODO: fix up
+        require(numShares < mockAccountBalance[msg.sender]);
+        withdrawls[msg.sender] += numShares; //TODO: fix up
+        mockAccountBalance[msg.sender] -= numShares;
+    }
+
+    function completeWithdraw() external {
+        asset.transfer(msg.sender, shares(msg.sender)); //TODO: fix up
     }
 
     function shares(address account) public view returns (uint256) {

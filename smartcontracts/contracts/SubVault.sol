@@ -27,6 +27,9 @@ contract SubVault is Ownable {
         stratVault.deposit(amount);
     }
 
+    /*
+    / Ribbon interactions
+     */
     function getValueInUnderlying() public view returns (uint256) {
         (uint16 curRound, , , , ) = stratVault.vaultState();
         (uint16 round, uint104 amount, ) = stratVault.depositReceipts(
@@ -70,6 +73,11 @@ contract SubVault is Ownable {
     }
 
     function withdrawTokens(uint256 amount) public onlyOwner {
+        collateral.transfer(owner(), amount);
+    }
+
+    function withdrawAllCollateral() public onlyOwner {
+        uint256 amount = collateral.balanceOf(address(this));
         collateral.transfer(owner(), amount);
     }
 }

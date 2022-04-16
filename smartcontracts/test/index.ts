@@ -24,13 +24,15 @@ describe("Vault", function () {
   let initSnapshotId: string;
 
   let initialDeposit: BigNumber;
+  let liquidationPrice: BigNumber;
   let initialCollateralValue: BigNumber;
 
   let liquidatedVaultAddress: string;
 
   before(async function () {
     [sender, debtBuyer] = await ethers.getSigners();
-    const initialPrice = 277030883681;
+    const initialPrice = BigNumber.from(277030883681);
+    liquidationPrice = initialPrice.mul(9).div(10);
     initialDeposit = BigNumber.from("10").pow(18);
     initialCollateralValue = initialDeposit.mul(initialPrice).div(1e8);
 
@@ -200,7 +202,7 @@ describe("Vault", function () {
       const maxAmount = await vault.maximumBorrowAmount(sender.address);
       await vault.borrow(maxAmount.sub(1));
 
-      await oracle.setPrice("27703088368");
+      await oracle.setPrice(liquidationPrice);
       await vault.liquidate(sender.address);
       const numAuctions = await vault.numAuctions();
       expect(numAuctions).to.be.eq(1);
@@ -223,12 +225,17 @@ describe("Vault", function () {
       const usdbVal = auction.price;
       const subVaultBond = auction.subVault;
       liquidatedVaultAddress = auction.subVault;
+
+      // Have to use usdb to buy debt
       const subVault = await ethers.getContractAt("SubVault", subVaultBond);
       await vault
         .connect(debtBuyer)
         .depositETH({ value: initialDeposit.mul(2) });
       await vault.connect(debtBuyer).borrow(usdbVal);
       await usdb.connect(debtBuyer).approve(vault.address, usdbVal);
+      // console.log(await vault.random(0));
+      const liquidatorBal = await weth.balanceOf(debtBuyer.address);
+      console.log(liquidatorBal);
       await vault.connect(debtBuyer).buyDebt(0);
 
       const newNumAuctions = await vault.numAuctions();
@@ -241,7 +248,25 @@ describe("Vault", function () {
         liquidatedVaultAddress
       );
       const bal = await subVault.getValueInUnderlying();
-      await subVault.connect(debtBuyer).withdrawInstantly(bal);
+      const info = async () => {
+        const subvaultWeth = await weth.balanceOf(subVault.address);
+        const userWeth = await weth.balanceOf(debtBuyer.address);
+        const vaultWeth = await weth.balanceOf(vault.address);
+        const ribVault = await weth.balanceOf(ribbonVault.address);
+        console.log({ userWeth, subvaultWeth, vaultWeth, ribVault });
+      };
+      const userWeth = await weth.balanceOf(debtBuyer.address);
+      await info();
+      await subVault.connect(debtBuyer).withdrawAllCollateral();
+      await info();
+
+      // await vault.connect(debtBuyer).withdrawAll();
+      const _bal = await subVault.getValueInUnderlying();
+      console.log(bal, _bal);
+      console.log(bal);
+      const liquidatorBal = await weth.balanceOf(debtBuyer.address);
+      console.log(liquidatorBal);
+      expect(userWeth).to.be.gt;
     });
   });
 });

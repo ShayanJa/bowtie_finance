@@ -140,6 +140,11 @@ contract Vault is BaseVault {
         subVault.withdrawInstantly(amount);
     }
 
+    function withdrawAll() public {
+        SubVault subVault = SubVault(subVaults[msg.sender]);
+        subVault.withdrawAll();
+    }
+
     /// @notice Initiates withdraw of the collateral from ribbon
     /// If the collateral is being used in an option it will be processed
     /// by ribbon at option expiry
@@ -154,6 +159,18 @@ contract Vault is BaseVault {
             "Too low of collateral"
         );
         SubVault(subVaults[msg.sender]).initiateWithdraw(amount);
+    }
+
+    function random(uint256 auctionId) public view returns (uint256, uint256) {
+        Auction memory auction = auctions[auctionId];
+        uint256 underlying = auction.subVault.getValueInUnderlying();
+        uint256 curValue = getValueOfCollateral(underlying);
+
+        uint256 discountedCollateral = auction
+            .debt
+            .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
+            .div(10**FEE_DECIMALS);
+        return (curValue, discountedCollateral);
     }
 
     /// @notice Withdraw tokens from subvault
@@ -177,7 +194,7 @@ contract Vault is BaseVault {
             .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
             .div(10**FEE_DECIMALS);
 
-        // require(curValue > discountedCollateral, "Collateral Value too low");
+        require(curValue > discountedCollateral, "Collateral Value too low");
 
         auctions[auctionId] = auctions[auctions.length - 1];
         auctions.pop();
@@ -195,8 +212,11 @@ contract Vault is BaseVault {
 
     function rolloverBadDebt() public onlyOwner {
         for (uint256 i = 0; i < auctions.length; i++) {
-            Auction memory auction = auctions[i];
             //todo Sell all bonds
+            Auction memory auction = auctions[i];
+            //Get Collateral from Ribbon Deposit
+            auction.subVault.withdrawAll();
+            // vault.withdrawAll();
         }
     }
 }
