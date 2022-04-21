@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -7,6 +7,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
+/// @title SubVault
+/// @notice
+/// Dedicated vault for each user to simplify accounting and concentrate risk
 contract SubVault is Ownable {
     using SafeMath for uint256;
 
@@ -24,37 +27,57 @@ contract SubVault is Ownable {
         stratVault.deposit(amount);
     }
 
+    /*
+    / Ribbon interactions
+     */
     function getValueInUnderlying() public view returns (uint256) {
-        // (,uint104 amount,) = stratVault.depositReceipts(address(this));
+        (uint16 curRound, , , , ) = stratVault.vaultState();
+        (uint16 round, uint104 amount, ) = stratVault.depositReceipts(
+            address(this)
+        );
         uint256 accValue = stratVault.accountVaultBalance(address(this));
-        // return  accValue.add(uint256(amount));
-        return accValue;
-    }
-
-    function getLiquidValueInUnderlying(address subVault)
-        public
-        view
-        returns (uint256)
-    {
-        (, uint104 amount, uint128 unredeemedShares) = stratVault
-            .depositReceipts(address(this));
-        return uint256(amount).add(uint256(unredeemedShares));
+        if (curRound > round) {
+            return accValue;
+        } else {
+            return accValue.add(uint256(amount));
+        }
     }
 
     function initiateWithdraw(uint256 amount) public onlyOwner {
         stratVault.initiateWithdraw(amount);
     }
 
+    function withdrawInstantly(uint256 amount) public onlyOwner {
+        stratVault.withdrawInstantly(amount);
+    }
+
     function initiateMaxWithdraw() public onlyOwner {
-        uint256 heldByVault = stratVault.shares(address(this));
-        stratVault.initiateWithdraw(heldByVault);
+        uint256 shares = stratVault.shares(msg.sender);
+        stratVault.initiateWithdraw(shares);
     }
 
-    function completeWithdrawl() public onlyOwner {
-        stratVault.completeWithdraw();
+    function withdraw(uint256 amount) public onlyOwner {
+        require(amount > 0, "!amount");
+        initiateWithdraw(amount);
     }
 
-    function withdrawTokens(address token, uint256 amount) public onlyOwner {
-        IERC20(token).transfer(owner(), amount);
+    function withdrawAll() public {
+        (, uint104 amount, uint128 unredeemedShares) = stratVault
+            .depositReceipts(msg.sender);
+        if (amount > 0) {
+            stratVault.withdrawInstantly(amount);
+        }
+        if (unredeemedShares > 0) {
+            initiateMaxWithdraw();
+        }
+    }
+
+    function withdrawTokens(uint256 amount) public onlyOwner {
+        collateral.transfer(owner(), amount);
+    }
+
+    function withdrawAllCollateral() public onlyOwner {
+        uint256 amount = collateral.balanceOf(address(this));
+        collateral.transfer(owner(), amount);
     }
 }

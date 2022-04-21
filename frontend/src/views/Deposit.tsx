@@ -31,7 +31,7 @@ const Deposit = () => {
       setPrice(newPrice);
     };
     setup();
-  });
+  }, []);
   return (
     <>
       <h2 className="mt-10 text-xl leading-6 font-medium text-white">

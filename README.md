@@ -2,9 +2,17 @@
 
 ### Purpose:
 
-Simply put i wanted to earn yield writing covered calls as well as using that collateral elsewhere.
-Bowtie allows you to borrow against your collaterall like other protocols(inspiration from mim, aave, and makerDAO), but by depositing your collaterall
-you will also be earning high yield writing call options against it.
+Users in Defi have unlocked liquidity by borrowing against spot, interest-bearing, fixed income, and market neutral collateral tokens, but nobody has unlocked liquidity in options. But now, using Bowtie, users can borrow against their options collateral, unlocking a whole new world of capital efficiency.
+
+We believe that capital is becoming even more fluid and one day any asset can be used as collateral. Utilising structured products as our initial case, we are able to earn high yield writing covered call options but also borrow against that collateral to leverage even more. Potentially running leverage option writing or writing naked call option just as an example
+
+One thing to note is we are not trying to compete with any options platform, we want to synergise with the existing ecosystem; We want to create a new lending protocol that allows existing users of these protocols to increase their liquidity and leverage. This means expanding to other chains and protocols.
+
+We are moving towards a highly composable world where all assets can be borrowed against.
+
+Still under development but demo on rinkeby testnet: https://bowtie-finance.vercel.app/
+
+More documentation: https://shay-talebi.gitbook.io/bowtie/
 
 ### How:
 

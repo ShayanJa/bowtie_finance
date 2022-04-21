@@ -17,6 +17,8 @@ import {
   Oracle__factory,
   Usdb__factory,
   Weth__factory,
+  SubVault__factory,
+  Otoken__factory,
 } from "../contracts/generated";
 import { constants } from "ethers";
 
@@ -55,6 +57,18 @@ export const useVaultContract = () => {
   return useMemo(() => {
     return Vault__factory.connect(VAULT_ADDRESS[chainId], provider);
   }, [provider, chainId]);
+};
+
+export const useSubVaultContract = () => {
+  const { provider } = useActiveWeb3();
+  return (fundAddress: string) =>
+    SubVault__factory.connect(fundAddress, provider);
+};
+
+export const useOptionsContract = () => {
+  const { provider } = useActiveWeb3();
+  return (fundAddress: string) =>
+    Otoken__factory.connect(fundAddress, provider);
 };
 
 export const useStakingContract = () => {

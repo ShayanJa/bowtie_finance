@@ -22,6 +22,10 @@ interface IRibbonThetaVault is IERC20 {
 
     function initiateWithdraw(uint256 numShares) external;
 
+    function initiateMaxWithdraw() external;
+
+    function withdrawInstantly(uint256 share) external;
+
     function shares(address account) external view returns (uint256);
 
     function depositReceipts(address)
@@ -30,6 +34,17 @@ interface IRibbonThetaVault is IERC20 {
         returns (
             uint16,
             uint104,
+            uint128
+        );
+
+    function vaultState()
+        external
+        view
+        returns (
+            uint16,
+            uint104,
+            uint104,
+            uint128,
             uint128
         );
 

@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
@@ -11,6 +11,9 @@ import {IWETH} from "../interfaces/IWETH.sol";
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
+/// @title BaseVault
+/// @notice
+/// Typical cdp vault which handls deposit/withdraw/liquidation/repayment
 contract BaseVault is Ownable {
     using SafeMath for uint256;
 
@@ -22,15 +25,17 @@ contract BaseVault is Ownable {
 
     mapping(address => uint256) private _balanceOf;
     mapping(address => uint256) public borrowed;
-    mapping(address => bool) public allowedStables;
 
-    uint256 public constant LIQUIDATION_FEE = 500;
+    uint256 public constant LIQUIDATION_FEE = 100;
     uint256 public constant DEPOSIT_FEE = 100;
     uint256 public constant COLATERALIZATION_FACTOR = 8000;
     uint256 public constant FEE_DECIMALS = 4;
 
     /// ======== Events ======== ///
     event Liquidated(address user, address liquidator, uint256 debt);
+    event Deposited(address user, uint256 amount);
+    event Withdraw(address user, uint256 amount);
+    event Repayed(address user, uint256 amount);
 
     constructor(
         address _collateral,
@@ -63,9 +68,10 @@ contract BaseVault is Ownable {
 
     function _deposit(uint256 amount) internal virtual {
         uint256 fee = amount.mul(DEPOSIT_FEE).div(10**FEE_DECIMALS);
+        _balanceOf[msg.sender] = _balanceOf[msg.sender].add(amount.sub(fee));
         collateral.transfer(address(stakingRewards), fee);
         stakingRewards.notifyRewardAmount(fee);
-        _balanceOf[msg.sender] = _balanceOf[msg.sender].add(amount.sub(fee));
+        emit Deposited(msg.sender, amount);
     }
 
     function withdraw(uint256 amount) public virtual {
@@ -84,8 +90,11 @@ contract BaseVault is Ownable {
         collateral.transfer(msg.sender, amount);
     }
 
-    function borrow(uint256 amount) public {
-        require(amount < maximumBorrowAmount(msg.sender), "Borrowing too much");
+    function borrow(uint256 amount) public virtual {
+        require(
+            borrowed[msg.sender].add(amount) < maximumBorrowAmount(msg.sender),
+            "Borrowing too much"
+        );
         borrowed[msg.sender] = borrowed[msg.sender].add(amount);
         usdB.mint(msg.sender, amount);
     }
@@ -97,36 +106,7 @@ contract BaseVault is Ownable {
         );
         usdB.burn(msg.sender, amount);
         borrowed[msg.sender] = borrowed[msg.sender].sub(amount);
-    }
-
-    function addStableToken(address token) public onlyOwner {
-        allowedStables[token] = true;
-    }
-
-    function removeStableToken(address token) public onlyOwner {
-        allowedStables[token] = true;
-    }
-
-    function repayWithStable(address token, uint256 amount) public {
-        require(allowedStables[token]);
-        require(
-            amount <= borrowed[msg.sender],
-            "Amount is greater than borrowed"
-        );
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
-        borrowed[msg.sender] = borrowed[msg.sender].sub(amount);
-    }
-
-    function mintUsdB(address token, uint256 amount) public {
-        require(allowedStables[token]);
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
-        usdB.mint(msg.sender, amount);
-    }
-
-    function burnUsdB(address token, uint256 amount) public {
-        require(allowedStables[token]);
-        IERC20Mintable(token).transferFrom(address(this), msg.sender, amount);
-        usdB.burn(msg.sender, amount);
+        emit Repayed(msg.sender, amount);
     }
 
     function maximumBorrowAmount(address user)
@@ -156,11 +136,16 @@ contract BaseVault is Ownable {
     }
 
     function liquidate(address user) public virtual {
-        require(getValueOfCollateral(_balanceOf[user]) < borrowed[user]);
+        require(
+            getValueOfCollateral(_balanceOf[user]) < borrowed[user],
+            "Collateral Value Too High"
+        );
         uint256 fee = _balanceOf[user].mul(LIQUIDATION_FEE).div(
             10**FEE_DECIMALS
         );
-        _balanceOf[msg.sender] = _balanceOf[msg.sender].add(fee);
+        uint256 debt = _balanceOf[user];
         _balanceOf[user] = 0;
+        _balanceOf[msg.sender] = _balanceOf[msg.sender].add(fee);
+        emit Liquidated(user, msg.sender, debt);
     }
 }

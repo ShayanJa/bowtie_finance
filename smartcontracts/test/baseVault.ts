@@ -2,10 +2,11 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import { BaseVault, MockOracle, MockUSD, WETH9, Vault } from "../typechain";
+import { BaseVault, MockOracle, MockUSD, WETH9 } from "../typechain";
 
 describe("BaseVault", function () {
   let sender: SignerWithAddress;
+  let liquidator: SignerWithAddress;
   let oracle: MockOracle;
   let usdb: MockUSD;
   let weth: WETH9;
@@ -13,7 +14,7 @@ describe("BaseVault", function () {
   let initSnapshotId: string;
   let initialDeposit: BigNumber;
   before(async function () {
-    [sender] = await ethers.getSigners();
+    [sender, liquidator] = await ethers.getSigners();
     const initialPrice = 277030883681;
     initialDeposit = BigNumber.from("10").pow(18);
 
@@ -119,7 +120,9 @@ describe("BaseVault", function () {
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));
     await oracle.setPrice("27703088368");
-    await vault.liquidate(sender.address);
+
+    await vault.connect(liquidator).liquidate(sender.address);
+
     expect(await vault.balanceOf(sender.address)).to.be.eq(0);
   });
 });
