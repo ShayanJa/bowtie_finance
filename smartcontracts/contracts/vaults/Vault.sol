@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {IERC20Mintable} from "./interfaces/IERC20Mintable.sol";
-import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
+import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
+import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SubVault} from "./SubVault.sol";
 import {BaseVault} from "./base/Vault.sol";
-import {BowTie} from "./BowTie.sol";
-import {IStakingRewards} from "./interfaces/IStakingRewards.sol";
+import {BowTie} from "../BowTie.sol";
+import {IStakingRewards} from "../interfaces/IStakingRewards.sol";
 
 /// @title Vault
 /// @notice
@@ -119,7 +119,8 @@ contract Vault is BaseVault {
         numAuctions += 1;
         borrowed[user] = 0;
 
-        subVault.withdrawAll();
+        uint256 shares = stratVault.shares(address(subVault));
+        // subVault.initiateWithdraw(shares);
 
         subVaults[user] = SubVault(address(0));
 
@@ -129,20 +130,13 @@ contract Vault is BaseVault {
     /// @notice Withdraw tokens from subvault
     /// @param amount Amount of Collaterall to withdraw from subvault
     function withdraw(uint256 amount) public virtual override {
-        require(amount <= balanceOf(msg.sender), "Must be less than deposited");
-        SubVault subVault = SubVault(subVaults[msg.sender]);
-        subVault.withdrawInstantly(amount);
+        withdrawInstantly(amount);
     }
 
     function withdrawInstantly(uint256 amount) public {
         require(amount <= balanceOf(msg.sender), "Must be less than deposited");
         SubVault subVault = SubVault(subVaults[msg.sender]);
         subVault.withdrawInstantly(amount);
-    }
-
-    function withdrawAll() public {
-        SubVault subVault = SubVault(subVaults[msg.sender]);
-        subVault.withdrawAll();
     }
 
     /// @notice Initiates withdraw of the collateral from ribbon
@@ -161,24 +155,12 @@ contract Vault is BaseVault {
         SubVault(subVaults[msg.sender]).initiateWithdraw(amount);
     }
 
-    function random(uint256 auctionId) public view returns (uint256, uint256) {
-        Auction memory auction = auctions[auctionId];
-        uint256 underlying = auction.subVault.getValueInUnderlying();
-        uint256 curValue = getValueOfCollateral(underlying);
-
-        uint256 discountedCollateral = auction
-            .debt
-            .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
-            .div(10**FEE_DECIMALS);
-        return (curValue, discountedCollateral);
-    }
-
     /// @notice Withdraw tokens from subvault
     /// @param amount Amount of Collaterall to withdraw from subvault
     function withdrawTokens(uint256 amount) public {
         SubVault subVault = subVaults[msg.sender];
         subVault.withdrawTokens(amount);
-        collateral.transfer(owner(), amount);
+        collateral.transfer(msg.sender, amount);
     }
 
     /// @notice Buys the auctioned off options collateral
@@ -189,10 +171,7 @@ contract Vault is BaseVault {
         uint256 underlying = auction.subVault.getValueInUnderlying();
         uint256 curValue = getValueOfCollateral(underlying);
 
-        uint256 discountedCollateral = auction
-            .debt
-            .mul((10**FEE_DECIMALS).add(DISCOUNTED_DEBT_FEE))
-            .div(10**FEE_DECIMALS);
+        uint256 discountedCollateral = auction.price;
 
         require(curValue > discountedCollateral, "Collateral Value too low");
 
@@ -210,13 +189,16 @@ contract Vault is BaseVault {
         auction.subVault.transferOwnership(msg.sender);
     }
 
+    /// @notice TODO: Sell all bad debt
+    /// @dev Should be called by
     function rolloverBadDebt() public onlyOwner {
         for (uint256 i = 0; i < auctions.length; i++) {
             //todo Sell all bonds
             Auction memory auction = auctions[i];
             //Get Collateral from Ribbon Deposit
-            auction.subVault.withdrawAll();
-            // vault.withdrawAll();
+            
+            auction.subVault.completeWithdraw();
+            auction.subVault.withdrawAllCollateral();
         }
     }
 }

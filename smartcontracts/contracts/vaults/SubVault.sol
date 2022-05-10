@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IRibbonThetaVault} from "./interfaces/IRibbonThetaVault.sol";
+import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -51,25 +51,8 @@ contract SubVault is Ownable {
         stratVault.withdrawInstantly(amount);
     }
 
-    function initiateMaxWithdraw() public onlyOwner {
-        uint256 shares = stratVault.shares(msg.sender);
-        stratVault.initiateWithdraw(shares);
-    }
-
-    function withdraw(uint256 amount) public onlyOwner {
-        require(amount > 0, "!amount");
-        initiateWithdraw(amount);
-    }
-
-    function withdrawAll() public {
-        (, uint104 amount, uint128 unredeemedShares) = stratVault
-            .depositReceipts(msg.sender);
-        if (amount > 0) {
-            stratVault.withdrawInstantly(amount);
-        }
-        if (unredeemedShares > 0) {
-            initiateMaxWithdraw();
-        }
+    function completeWithdraw() public onlyOwner {
+        stratVault.completeWithdraw();
     }
 
     function withdrawTokens(uint256 amount) public onlyOwner {
