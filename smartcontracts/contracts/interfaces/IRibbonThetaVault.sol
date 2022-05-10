@@ -22,8 +22,6 @@ interface IRibbonThetaVault is IERC20 {
 
     function initiateWithdraw(uint256 numShares) external;
 
-    function initiateMaxWithdraw() external;
-
     function withdrawInstantly(uint256 share) external;
 
     function shares(address account) external view returns (uint256);

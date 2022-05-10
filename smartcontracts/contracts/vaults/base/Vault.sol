@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
-import {IStakingRewards} from "../interfaces/IStakingRewards.sol";
+import {IRibbonThetaVault} from "../../interfaces/IRibbonThetaVault.sol";
+import {IStakingRewards} from "../../interfaces/IStakingRewards.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
+import {IERC20Mintable} from "../../interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IWETH} from "../interfaces/IWETH.sol";
+import {IWETH} from "../../interfaces/IWETH.sol";
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 

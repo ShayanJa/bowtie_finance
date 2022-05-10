@@ -10,8 +10,9 @@ contract MockRibbonThetaVault is ERC20, Ownable {
 
     IERC20 public asset;
 
-    mapping(address => uint256) public mockAccountBalance;
     mapping(address => uint256) public withdrawls;
+
+    uint16 public round = 1;
 
     struct DepositReceipt {
         // Maximum of 65535 rounds. Assuming 1 round is 7 days, maximum is 1256 years.
@@ -47,7 +48,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     }
 
     function pricePerShare() external pure returns (uint256) {
-        return 1065716367383768781;
+        return 1000000000000000000;
     }
 
     function mint(address receiver, uint256 amount) external onlyOwner {
@@ -55,14 +56,12 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     }
 
     function depositFor(uint256 amount, address creditor) public {
+        DepositReceipt storage reciept = depositReceipts[creditor];
+        reciept.unredeemedShares = reciept.amount;
+        reciept.round = round;
+
         asset.transferFrom(msg.sender, address(this), amount);
-        mockAccountBalance[creditor] += amount;
-        depositReceipts[creditor] = DepositReceipt({
-            round: uint16(1),
-            amount: uint104(amount),
-            unredeemedShares: uint128(0)
-        });
-        mockAccountBalance[creditor] = amount;
+        reciept.amount = uint104(amount);
     }
 
     function deposit(uint256 amount) public {
@@ -70,21 +69,33 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     }
 
     function accountVaultBalance(address acct) public view returns (uint256) {
-        return 0;
+        DepositReceipt storage reciept = depositReceipts[acct];
+
+        return reciept.unredeemedShares;
     }
 
     function initiateWithdraw(uint256 numShares) external {
-        require(numShares < mockAccountBalance[msg.sender]);
+        // Not exactly how it works, there is a redeem function which
+        // transfers unreedemedshares to redeemed shares first
+        DepositReceipt storage reciept = depositReceipts[msg.sender];
         withdrawls[msg.sender] += numShares; //TODO: fix up
-        mockAccountBalance[msg.sender] -= numShares;
+
+        reciept.unredeemedShares += uint104(reciept.amount);
+        require(numShares <= reciept.unredeemedShares, "shares must be less");
+        reciept.unredeemedShares -= uint128(numShares);
+
+        reciept.amount = 0;
     }
 
     function completeWithdraw() external {
-        asset.transfer(msg.sender, shares(msg.sender)); //TODO: fix up
+        asset.transfer(msg.sender, withdrawls[msg.sender]); //TODO: fix up
+        withdrawls[msg.sender] = 0;
     }
 
     function shares(address account) public view returns (uint256) {
-        return mockAccountBalance[account];
+        DepositReceipt memory depositReceipt = depositReceipts[account];
+
+        return depositReceipt.unredeemedShares;
     }
 
     function withdrawInstantly(uint256 share) external {
@@ -97,7 +108,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
 
     function vaultState()
         external
-        pure
+        view
         returns (
             uint16,
             uint104,
@@ -106,6 +117,6 @@ contract MockRibbonThetaVault is ERC20, Ownable {
             uint128
         )
     {
-        return (1, 0, 0, 0, 0);
+        return (round, 0, 0, 0, 0);
     }
 }
