@@ -63,4 +63,6 @@ contract SubVault is Ownable {
         uint256 amount = collateral.balanceOf(address(this));
         collateral.transfer(owner(), amount);
     }
+
+    receive() external payable {}
 }

@@ -285,7 +285,7 @@ describe("Vault", function () {
       console.log(bal, _bal);
       console.log(bal);
       await info();
-      await subVault.connect(debtBuyer).initiateWithdraw(_bal);
+      // await subVault.connect(debtBuyer).initiateWithdraw(_bal);
       await info();
 
       await subVault.connect(debtBuyer).completeWithdraw();

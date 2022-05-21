@@ -71,7 +71,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     function accountVaultBalance(address acct) public view returns (uint256) {
         DepositReceipt storage reciept = depositReceipts[acct];
 
-        return reciept.unredeemedShares;
+        return reciept.unredeemedShares + withdrawls[acct];
     }
 
     function initiateWithdraw(uint256 numShares) external {

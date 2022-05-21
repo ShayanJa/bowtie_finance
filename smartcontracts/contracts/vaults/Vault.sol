@@ -120,9 +120,9 @@ contract Vault is BaseVault {
         borrowed[user] = 0;
 
         uint256 shares = stratVault.shares(address(subVault));
-        // subVault.initiateWithdraw(shares);
+        subVault.initiateWithdraw(shares);
 
-        subVaults[user] = SubVault(address(0));
+        subVaults[user] = SubVault(payable(address(0)));
 
         emit Liquidated(user, msg.sender, debt);
     }
@@ -196,9 +196,11 @@ contract Vault is BaseVault {
             //todo Sell all bonds
             Auction memory auction = auctions[i];
             //Get Collateral from Ribbon Deposit
-            
+
             auction.subVault.completeWithdraw();
             auction.subVault.withdrawAllCollateral();
         }
     }
+
+    receive() external payable {}
 }
