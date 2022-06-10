@@ -146,7 +146,8 @@ describe.skip("Forked Vault", function () {
     });
     it("should revert: only owner allowed to withdraw tokeens", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
+        .reverted;
     });
     it("only vault can withdraw tokens from subVault ", async function () {
       // const amount = 100;
@@ -162,7 +163,8 @@ describe.skip("Forked Vault", function () {
 
     it("should revert: only msg.sender and liquidator can access subVault", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
+        .reverted;
     });
   });
 

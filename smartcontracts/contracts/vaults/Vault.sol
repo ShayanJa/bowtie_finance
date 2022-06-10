@@ -63,7 +63,11 @@ contract Vault is BaseVault {
     function _deposit(uint256 amount) internal virtual override {
         SubVault vault = subVaults[msg.sender];
         if (address(vault) == address(0)) {
-            vault = new SubVault(address(collateral), address(stratVault));
+            vault = new SubVault(
+                address(collateral),
+                address(stratVault),
+                address(WETH)
+            );
             subVaults[msg.sender] = vault;
         }
         collateral.approve(address(stratVault), amount);
@@ -159,8 +163,7 @@ contract Vault is BaseVault {
     /// @param amount Amount of Collaterall to withdraw from subvault
     function withdrawTokens(uint256 amount) public {
         SubVault subVault = subVaults[msg.sender];
-        subVault.withdrawTokens(amount);
-        collateral.transfer(msg.sender, amount);
+        subVault.withdrawTokens(msg.sender, amount);
     }
 
     /// @notice Buys the auctioned off options collateral

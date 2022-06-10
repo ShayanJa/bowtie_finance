@@ -13,15 +13,6 @@ async function main() {
     "0x0a77230d17318075983913bc2145db16c7366156"
   );
 
-  /*
-  // TEST: liquidations by updating oracle price
-  //
-  // const initialPrice = 277030883681;
-  //
-  // const Oracle = await ethers.getContractFactory("MockOracle");
-  // const oracle = await Oracle.deploy(initialPrice);
-  */
-
   const weth = await ethers.getContractAt(
     "WETH9",
     "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"

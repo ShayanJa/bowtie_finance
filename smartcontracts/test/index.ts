@@ -49,7 +49,7 @@ describe("Vault", function () {
     weth = await WETH.deploy();
 
     const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
-    ribbonVault = await RibbonVault.deploy(weth.address);
+    ribbonVault = await RibbonVault.deploy(weth.address, weth.address);
 
     const STAKING = await ethers.getContractFactory("StakingRewards");
     const staking = await STAKING.deploy(
@@ -162,7 +162,8 @@ describe("Vault", function () {
     });
     it("should revert: only owner allowed to withdraw tokeens", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
+        .reverted;
     });
 
     it("only vault can withdraw tokens from subVault ", async function () {
@@ -170,6 +171,8 @@ describe("Vault", function () {
       const reciept = await ribbonVault.depositReceipts(sender.address);
       console.log(reciept);
       await vault.withdraw(amount);
+      const actual = await ethers.provider.getBalance(subVault.address);
+      expect(actual).to.be.eq(amount);
       await vault.withdrawTokens(amount);
     });
     it("only vault can withdraw tokens from subVault ", async function () {
@@ -182,7 +185,8 @@ describe("Vault", function () {
 
     it("should revert: only msg.sender and liquidator can access subVault", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
+        .reverted;
     });
   });
 
@@ -322,7 +326,7 @@ describe("UsdB", function () {
     weth = await WETH.deploy();
 
     const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
-    ribbonVault = await RibbonVault.deploy(weth.address);
+    ribbonVault = await RibbonVault.deploy(weth.address, weth.address);
 
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();

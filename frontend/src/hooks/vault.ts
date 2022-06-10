@@ -17,7 +17,8 @@ export const useVault = (): [
   () => Promise<string>,
   (amount: string) => Promise<void>,
   (amount: string) => Promise<void>,
-  () => Promise<string>
+  () => Promise<string>,
+  (amount: string) => Promise<void>
 ] => {
   const vault = useVaultContract();
   const oracle = useOracleContract();
@@ -160,6 +161,25 @@ export const useVault = (): [
     },
     [vault, address]
   );
+  const withdrawTokens = useCallback(
+    async (amount) => {
+      try {
+        const req = async () => {
+          const tx = await vault.withdrawTokens(utils.parseEther(amount));
+          await tx.wait();
+        };
+        await toast.promise(req(), {
+          loading: "Withdraw...",
+          success: "Withdrawed",
+          error: "Error Withdrawing",
+        });
+        await refresh();
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [vault, address]
+  );
   const payback = useCallback(
     async (amount) => {
       try {
@@ -214,5 +234,6 @@ export const useVault = (): [
     withdraw,
     payback,
     maxWithdraw,
+    withdrawTokens,
   ];
 };

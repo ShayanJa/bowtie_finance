@@ -6,6 +6,7 @@ import {IRibbonThetaVault} from "../interfaces/IRibbonThetaVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
 
 /// @title SubVault
 /// @notice
@@ -15,10 +16,16 @@ contract SubVault is Ownable {
 
     IRibbonThetaVault public stratVault;
     IERC20 public collateral;
+    IWETH public immutable WETH;
 
-    constructor(address _collateral, address _stratVault) {
+    constructor(
+        address _collateral,
+        address _stratVault,
+        address _weth
+    ) {
         collateral = IERC20(_collateral);
         stratVault = IRibbonThetaVault(_stratVault);
+        WETH = IWETH(_weth);
     }
 
     function deposit(uint256 amount) public onlyOwner {
@@ -55,8 +62,16 @@ contract SubVault is Ownable {
         stratVault.completeWithdraw();
     }
 
-    function withdrawTokens(uint256 amount) public onlyOwner {
-        collateral.transfer(owner(), amount);
+    function withdrawTokens(address recipient, uint256 amount)
+        public
+        onlyOwner
+    {
+        if (address(collateral) == address(WETH)) {
+            (bool success, ) = recipient.call{value: amount}("");
+            require(success, "Transfer failed");
+            return;
+        }
+        collateral.transfer(recipient, amount);
     }
 
     function withdrawAllCollateral() public onlyOwner {
