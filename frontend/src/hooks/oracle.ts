@@ -10,10 +10,8 @@ export const useOracle = (): [() => Promise<string>] => {
   const getPrice = useCallback(async () => {
     try {
       const [, price] = await oracle.latestRoundData();
-      const newPrice = price.div(
-        BigNumber.from(10).pow(await oracle.decimals())
-      );
-      return newPrice.toString();
+      const newPrice = utils.formatUnits(price, await oracle.decimals());
+      return newPrice;
     } catch (e) {
       console.log(e);
       return BigNumber.from(0).toString();

@@ -37,6 +37,13 @@ const config: HardhatUserConfig = {
         // blockNumber: BLOCK_NUMBER[CHAINID],
       },
     },
+    avax: {
+      url: process.env.AVAX_RPC_URL || "",
+      accounts:
+        process.env.AVAX_PRIVATE_KEY !== undefined
+          ? [process.env.AVAX_PRIVATE_KEY]
+          : [],
+    },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
       accounts:

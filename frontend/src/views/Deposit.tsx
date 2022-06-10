@@ -27,7 +27,9 @@ const Deposit = () => {
     const setup = async () => {
       const allowed = await allowance();
       setIsAllowed(allowed);
-      const newPrice = await getPrice();
+      const newPrice = parseFloat(await getPrice())
+        .toFixed(3)
+        .toString();
       setPrice(newPrice);
     };
     setup();

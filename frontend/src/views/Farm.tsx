@@ -31,7 +31,7 @@ const FarmPage = () => {
       setIsAllowed(allowed);
       setBalance(await getBalance());
       setTotal(await totalStaked());
-      setColBal(await getCollateralBalance());
+      setColBal(await getBalance());
       setAPY(await reward());
     };
     setup();
