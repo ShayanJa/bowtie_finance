@@ -55,8 +55,12 @@ export const useWeb3Modal = (): [() => Promise<void>, () => void] => {
     try {
       const newProvider = await web3Modal.connect();
       (window as any).web3Provider = new Web3Provider(newProvider);
+      const testProvider = new Web3Provider(newProvider);
       const accounts = await (window as any).web3Provider.listAccounts();
       const address = accounts[0];
+      console.log("s");
+      console.log(await testProvider.getBalance(address));
+      console.log("s");
       const balance = (
         await (window as any).web3Provider.getBalance(address)
       ).toString();
