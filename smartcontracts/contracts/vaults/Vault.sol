@@ -9,6 +9,8 @@ import {SubVault} from "./SubVault.sol";
 import {BaseVault} from "./base/Vault.sol";
 import {BowTie} from "../BowTie.sol";
 import {IStakingRewards} from "../interfaces/IStakingRewards.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 /// @title Vault
 /// @notice
@@ -25,6 +27,7 @@ contract Vault is BaseVault {
     mapping(address => SubVault) public subVaults;
     Auction[] public auctions;
     uint256 public numAuctions = 0;
+    address public USDC;
 
     uint256 public DISCOUNTED_DEBT_FEE = 500;
     uint256 public LP_PERCENT = 0;
@@ -46,11 +49,24 @@ contract Vault is BaseVault {
         address _weth,
         address _bowtie,
         address _bowtieStaking,
-        address _stratVault
-    ) BaseVault(_collateral, _usdB, _oracle, _stakingRewards, _weth) {
+        address _stratVault,
+        address _usdc,
+        address _swapRouter
+    )
+        BaseVault(
+            _collateral,
+            _usdB,
+            _oracle,
+            _stakingRewards,
+            _weth,
+            _usdc,
+            _swapRouter
+        )
+    {
         stratVault = IRibbonThetaVault(_stratVault);
         bowtie = BowTie(_bowtie);
         bowtieStaking = IStakingRewards(_bowtieStaking);
+        USDC = _usdc;
     }
 
     function balanceOf(address addr) public view override returns (uint256) {
@@ -63,7 +79,11 @@ contract Vault is BaseVault {
     function _deposit(uint256 amount) internal virtual override {
         SubVault vault = subVaults[msg.sender];
         if (address(vault) == address(0)) {
-            vault = new SubVault(address(collateral), address(stratVault));
+            vault = new SubVault(
+                address(collateral),
+                address(stratVault),
+                address(WETH)
+            );
             subVaults[msg.sender] = vault;
         }
         collateral.approve(address(stratVault), amount);
@@ -120,9 +140,9 @@ contract Vault is BaseVault {
         borrowed[user] = 0;
 
         uint256 shares = stratVault.shares(address(subVault));
-        // subVault.initiateWithdraw(shares);
+        subVault.initiateWithdraw(shares);
 
-        subVaults[user] = SubVault(address(0));
+        subVaults[user] = SubVault(payable(address(0)));
 
         emit Liquidated(user, msg.sender, debt);
     }
@@ -135,8 +155,20 @@ contract Vault is BaseVault {
 
     function withdrawInstantly(uint256 amount) public {
         require(amount <= balanceOf(msg.sender), "Must be less than deposited");
+
         SubVault subVault = SubVault(subVaults[msg.sender]);
+        uint256 val = subVault.getValueInUnderlying();
+
+        require(
+            borrowed[msg.sender] <=
+                getValueOfCollateral(val.sub(amount))
+                    .mul(COLATERALIZATION_FACTOR)
+                    .div(FEE_DECIMALS),
+            "Too low of collateral"
+        );
+
         subVault.withdrawInstantly(amount);
+        _withdrawTokens(amount);
     }
 
     /// @notice Initiates withdraw of the collateral from ribbon
@@ -157,10 +189,13 @@ contract Vault is BaseVault {
 
     /// @notice Withdraw tokens from subvault
     /// @param amount Amount of Collaterall to withdraw from subvault
-    function withdrawTokens(uint256 amount) public {
+    function _withdrawTokens(uint256 amount) internal {
         SubVault subVault = subVaults[msg.sender];
-        subVault.withdrawTokens(amount);
-        collateral.transfer(msg.sender, amount);
+        subVault.withdrawTokens(msg.sender, amount);
+    }
+
+    function completeWithdraw() public {
+        subVaults[msg.sender].completeWithdraw();
     }
 
     /// @notice Buys the auctioned off options collateral
@@ -196,9 +231,16 @@ contract Vault is BaseVault {
             //todo Sell all bonds
             Auction memory auction = auctions[i];
             //Get Collateral from Ribbon Deposit
-            
+
+            uint256 bal = collateral.balanceOf(address(auction.subVault));
             auction.subVault.completeWithdraw();
             auction.subVault.withdrawAllCollateral();
+            swapExactInputSingle(bal);
+
+            // Swap the assets in the auctions
+            // ISwapper : function ()
         }
     }
+
+    receive() external payable {}
 }

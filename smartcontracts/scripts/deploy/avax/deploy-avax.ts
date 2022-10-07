@@ -7,38 +7,28 @@ import { ethers } from "hardhat";
 
 async function main() {
   const [sender] = await ethers.getSigners();
-  const testAddress = "0x30106e56b179c62bD0972DdEd25bD86cB2fa3d88";
 
   const oracle = await ethers.getContractAt(
     "AggregatorV3Interface",
-    "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419"
+    "0x0a77230d17318075983913bc2145db16c7366156"
   );
-
-  /*
-  // TEST: liquidations by updating oracle price
-  //
-  // const initialPrice = 277030883681;
-  //
-  // const Oracle = await ethers.getContractFactory("MockOracle");
-  // const oracle = await Oracle.deploy(initialPrice);
-  */
 
   const weth = await ethers.getContractAt(
     "WETH9",
-    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"
   );
-
-  const router = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
-
-  const usdc = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
   const ribbonVault = await ethers.getContractAt(
     "IRibbonThetaVault",
-    "0x25751853Eab4D0eB3652B5eB6ecB102A2789644B"
+    "0x98d03125c62DaE2328D9d3cb32b7B969e6a87787"
   );
 
-  const USDB = await ethers.getContractFactory("UsdB");
-  const usdb = await USDB.deploy();
+  const usdb = await ethers.getContractAt(
+    "UsdB",
+    "0x480f99A35579985353c900827F6bF3B9ff8c41e5"
+  );
+
+  const curveToken = "0x39BA6943D7C0F415bce7A8c42A8C601eaD6Ee426";
 
   const Bowtie = await ethers.getContractFactory("BowTie");
   const bowtie = await Bowtie.deploy();
@@ -48,7 +38,7 @@ async function main() {
     sender.address,
     sender.address,
     weth.address,
-    weth.address
+    curveToken
   );
 
   const bowtieStaking = await STAKING.deploy(
@@ -67,16 +57,13 @@ async function main() {
     weth.address,
     bowtie.address,
     bowtieStaking.address,
-    ribbonVault.address,
-    router,
-    usdc
+    ribbonVault.address
   );
 
   await vault.deployed();
   await staking.setRewardsDistribution(vault.address);
   await bowtieStaking.setRewardsDistribution(vault.address);
   await usdb.transferOwnership(vault.address);
-
   console.log({
     weth: weth.address,
     usdb: usdb.address,
@@ -84,12 +71,6 @@ async function main() {
     vault: vault.address,
     staking: staking.address,
     bowtieStaking: bowtieStaking.address,
-    router: router,
-    usdc: usdc,
-  });
-  await sender.sendTransaction({
-    to: testAddress,
-    value: ethers.utils.parseEther("1"),
   });
 }
 

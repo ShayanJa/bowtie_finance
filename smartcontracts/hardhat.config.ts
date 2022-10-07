@@ -27,15 +27,29 @@ const config: HardhatUserConfig = {
       {
         version: "0.4.18",
       },
+      {
+        version: "0.7.6",
+      },
+      {
+        version: "0.8.0",
+      },
     ],
   },
   networks: {
     hardhat: {
       chainId: 1,
+
       forking: {
         url: process.env.TESTNET_URL || "",
         // blockNumber: BLOCK_NUMBER[CHAINID],
       },
+    },
+    avax: {
+      url: process.env.AVAX_RPC_URL || "",
+      accounts:
+        process.env.AVAX_PRIVATE_KEY !== undefined
+          ? [process.env.AVAX_PRIVATE_KEY]
+          : [],
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",

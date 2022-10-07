@@ -3,7 +3,22 @@ import Header from "../components/Header";
 import { useVault } from "../hooks/vault";
 
 const Withdraw = () => {
-  const [, , , , , , , , withdraw] = useVault();
+  const [
+    ,
+    ,
+    ,
+    ,
+    ,
+    ,
+    ,
+    ,
+    withdraw,
+    ,
+    ,
+    withdrawTokens,
+    initiateWithdraw,
+    completeWithdraw,
+  ] = useVault();
   const [amount, setAmount] = useState("0");
 
   const handleInput = (event: any) => {
@@ -73,9 +88,30 @@ const Withdraw = () => {
                   <button
                     onClick={() => withdraw(amount)}
                     type="submit"
-                    className="inline-flex mt-5 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex m-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Withdraw
+                  </button>
+                  <button
+                    onClick={() => initiateWithdraw(amount)}
+                    type="submit"
+                    className="inline-flex m-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Initiate Withdrawl
+                  </button>
+                  <button
+                    onClick={() => completeWithdraw()}
+                    type="submit"
+                    className="inline-flex m-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Complete Withdraw
+                  </button>
+                  <button
+                    onClick={() => withdrawTokens(amount)}
+                    type="submit"
+                    className="inline-flex m-2 justify-center py-4 px-8 border-transparent shadow-sm text-xl font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Withdraw Tokens
                   </button>
                 </div>
               </div>

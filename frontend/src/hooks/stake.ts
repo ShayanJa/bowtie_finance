@@ -19,6 +19,8 @@ export const useStakingRewards = (): [
 
   const allowance = useCallback(async () => {
     const collateral = await staking.stakingToken();
+    console.log(collateral);
+
     const coin = TestUSDCoin__factory.connect(collateral, provider);
     const x = await coin.allowance(address, staking.address);
     return x.gt(0);

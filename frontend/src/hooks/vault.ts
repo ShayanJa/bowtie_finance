@@ -17,7 +17,10 @@ export const useVault = (): [
   () => Promise<string>,
   (amount: string) => Promise<void>,
   (amount: string) => Promise<void>,
-  () => Promise<string>
+  () => Promise<string>,
+  (amount: string) => Promise<void>,
+  (amount: string) => Promise<void>,
+  () => Promise<void>
 ] => {
   const vault = useVaultContract();
   const oracle = useOracleContract();
@@ -160,6 +163,44 @@ export const useVault = (): [
     },
     [vault, address]
   );
+  const initiateWithdrawl = useCallback(
+    async (amount) => {
+      try {
+        const req = async () => {
+          const tx = await vault.initiateWithdraw(utils.parseEther(amount));
+          await tx.wait();
+        };
+        await toast.promise(req(), {
+          loading: "Initiating Withdraw...",
+          success: "Withdrawl Initiated",
+          error: "Error Withdrawing",
+        });
+        await refresh();
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [vault, address]
+  );
+  const withdrawTokens = useCallback(
+    async (amount) => {
+      try {
+        const req = async () => {
+          const tx = await vault.withdrawTokens(utils.parseEther(amount));
+          await tx.wait();
+        };
+        await toast.promise(req(), {
+          loading: "Withdraw...",
+          success: "Withdrawed",
+          error: "Error Withdrawing",
+        });
+        await refresh();
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [vault, address]
+  );
   const payback = useCallback(
     async (amount) => {
       try {
@@ -202,6 +243,14 @@ export const useVault = (): [
     }
   }, [vault, address]);
 
+  const completeWithdrawl = useCallback(async () => {
+    try {
+      await vault.completeWithdraw();
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
   return [
     balance,
     allowance,
@@ -214,5 +263,8 @@ export const useVault = (): [
     withdraw,
     payback,
     maxWithdraw,
+    withdrawTokens,
+    initiateWithdrawl,
+    completeWithdrawl,
   ];
 };

@@ -2,14 +2,22 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import { BaseVault, MockOracle, MockUSD, WETH9 } from "../typechain";
+import {
+  BaseVault,
+  MockOracle,
+  MockUSD,
+  WETH9,
+  TestUniswapV3Router,
+} from "../typechain";
 
 describe("BaseVault", function () {
   let sender: SignerWithAddress;
   let liquidator: SignerWithAddress;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let usdc: MockUSD;
   let weth: WETH9;
+  let router: TestUniswapV3Router;
   let vault: BaseVault;
   let initSnapshotId: string;
   let initialDeposit: BigNumber;
@@ -27,6 +35,12 @@ describe("BaseVault", function () {
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
 
+    const USDC = await ethers.getContractFactory("MockUSD");
+    usdc = await USDC.deploy();
+
+    const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+    router = await SwapRouter.deploy();
+
     const STAKING = await ethers.getContractFactory("StakingRewards");
     const staking = await STAKING.deploy(
       sender.address,
@@ -41,7 +55,9 @@ describe("BaseVault", function () {
       usdb.address,
       oracle.address,
       staking.address,
-      weth.address
+      weth.address,
+      usdc.address,
+      router.address
     );
     await staking.setRewardsDistribution(vault.address);
     await usdb.transferOwnership(vault.address);
@@ -133,7 +149,9 @@ describe("UsdB", function () {
   let oracle: MockOracle;
   let usdb: MockUSD;
   let vault: BaseVault;
+  let usdc: MockUSD;
   let weth: WETH9;
+  let router: TestUniswapV3Router;
 
   before(async function () {
     [sender] = await ethers.getSigners();
@@ -144,6 +162,12 @@ describe("UsdB", function () {
 
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
+
+    const USDC = await ethers.getContractFactory("MockUSD");
+    usdc = await USDC.deploy();
+
+    const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+    router = await SwapRouter.deploy();
 
     const WETH = await ethers.getContractFactory("WETH9");
     weth = await WETH.deploy();
@@ -162,7 +186,9 @@ describe("UsdB", function () {
       usdb.address,
       oracle.address,
       staking.address,
-      weth.address
+      weth.address,
+      usdc.address,
+      router.address
     );
   });
   it("should transfer ownership", async function () {

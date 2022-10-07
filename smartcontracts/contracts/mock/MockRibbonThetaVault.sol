@@ -4,11 +4,13 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
 
 contract MockRibbonThetaVault is ERC20, Ownable {
     using SafeMath for uint256;
 
     IERC20 public asset;
+    IWETH public immutable WETH;
 
     mapping(address => uint256) public withdrawls;
 
@@ -43,8 +45,9 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     mapping(address => DepositReceipt) public depositReceipts;
     uint104 private unredeemedShares = 0;
 
-    constructor(address _asset) ERC20("ETHVAULT", "ETHV") {
+    constructor(address _asset, address _weth) ERC20("ETHVAULT", "ETHV") {
         asset = IERC20(_asset);
+        WETH = IWETH(_weth);
     }
 
     function pricePerShare() external pure returns (uint256) {
@@ -71,7 +74,7 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     function accountVaultBalance(address acct) public view returns (uint256) {
         DepositReceipt storage reciept = depositReceipts[acct];
 
-        return reciept.unredeemedShares;
+        return reciept.unredeemedShares + withdrawls[acct];
     }
 
     function initiateWithdraw(uint256 numShares) external {
@@ -103,6 +106,12 @@ contract MockRibbonThetaVault is ERC20, Ownable {
         uint256 receiptAmount = depositReceipt.amount;
 
         depositReceipt.amount = uint104(receiptAmount.sub(share));
+        if (address(asset) == address(WETH)) {
+            IWETH(WETH).withdraw(share);
+            (bool success, ) = msg.sender.call{value: share}("");
+            require(success, "Transfer failed");
+            return;
+        }
         asset.transfer(msg.sender, share);
     }
 
@@ -119,4 +128,6 @@ contract MockRibbonThetaVault is ERC20, Ownable {
     {
         return (round, 0, 0, 0, 0);
     }
+
+    receive() external payable {}
 }

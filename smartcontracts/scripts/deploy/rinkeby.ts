@@ -18,6 +18,12 @@ async function main() {
   const USDB = await ethers.getContractFactory("UsdB");
   const usdb = await USDB.deploy();
 
+  const USDC = await ethers.getContractFactory("MockUSD");
+  const usdc = await USDC.deploy();
+
+  const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+  const router = await SwapRouter.deploy();
+
   const STAKING = await ethers.getContractFactory("StakingRewards");
   const staking = await STAKING.deploy(
     sender.address,
@@ -32,7 +38,9 @@ async function main() {
     usdb.address,
     oracle.address,
     staking.address,
-    weth.address
+    weth.address,
+    usdc.address,
+    router.address
   );
 
   await vault.deployed();

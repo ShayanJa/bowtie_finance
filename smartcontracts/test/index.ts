@@ -10,19 +10,23 @@ import {
   Vault,
   SubVault,
   BowTie,
+  TestUniswapV3Router,
 } from "../typechain";
 
 describe("Vault", function () {
   let sender: SignerWithAddress;
   let debtBuyer: SignerWithAddress;
+
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let usdc: MockUSD;
+  let router: TestUniswapV3Router;
   let bowtie: BowTie;
   let weth: WETH9;
   let vault: Vault;
-  let initSnapshotId: string;
 
+  let initSnapshotId: string;
   let initialDeposit: BigNumber;
   let liquidationPrice: BigNumber;
   let initialCollateralValue: BigNumber;
@@ -31,6 +35,7 @@ describe("Vault", function () {
 
   before(async function () {
     [sender, debtBuyer] = await ethers.getSigners();
+
     const initialPrice = BigNumber.from(277030883681);
     liquidationPrice = initialPrice.mul(9).div(10);
     initialDeposit = BigNumber.from("10").pow(18);
@@ -42,6 +47,12 @@ describe("Vault", function () {
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
 
+    const USDC = await ethers.getContractFactory("MockUSD");
+    usdc = await USDC.deploy();
+
+    const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+    router = await SwapRouter.deploy();
+
     const Bowtie = await ethers.getContractFactory("BowTie");
     bowtie = await Bowtie.deploy();
 
@@ -49,7 +60,7 @@ describe("Vault", function () {
     weth = await WETH.deploy();
 
     const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
-    ribbonVault = await RibbonVault.deploy(weth.address);
+    ribbonVault = await RibbonVault.deploy(weth.address, weth.address);
 
     const STAKING = await ethers.getContractFactory("StakingRewards");
     const staking = await STAKING.deploy(
@@ -75,7 +86,9 @@ describe("Vault", function () {
       weth.address,
       bowtie.address,
       bowtieStaking.address,
-      ribbonVault.address
+      ribbonVault.address,
+      usdc.address,
+      router.address
     );
     await usdb.transferOwnership(vault.address);
     await staking.setRewardsDistribution(vault.address);
@@ -84,15 +97,20 @@ describe("Vault", function () {
 
   it("should deposit ETH", async function () {
     initSnapshotId = await takeSnapshot();
+
     await weth.approve(vault.address, initialDeposit);
     await vault.depositETH({ value: initialDeposit });
+
     const bal = await vault.balanceOf(sender.address);
     console.log(bal);
+
     const subVaultAddress = await vault.subVaults(sender.address);
     const subVault = await ethers.getContractAt("SubVault", subVaultAddress);
     const reciept = await ribbonVault.depositReceipts(subVault.address);
+
     console.log(reciept);
     console.log(initialDeposit);
+
     expect(reciept.amount).to.be.eq(bal);
     expect(bal).to.be.eq(initialDeposit);
 
@@ -119,6 +137,7 @@ describe("Vault", function () {
   });
   it("should revert: Can't borrow total colalteral amount", async function () {
     initSnapshotId = await takeSnapshot();
+
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await expect(vault.borrow(maxAmount)).to.be.revertedWith(
       "Borrowing too much"
@@ -128,9 +147,11 @@ describe("Vault", function () {
   });
   it("should borrow up to max sub 1", async function () {
     initSnapshotId = await takeSnapshot();
+
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));
     expect(await usdb.balanceOf(sender.address)).to.be.eq(maxAmount.sub(1));
+
     revertToSnapShot(initSnapshotId);
   });
   it("should borrow correct value", async function () {
@@ -162,7 +183,8 @@ describe("Vault", function () {
     });
     it("should revert: only owner allowed to withdraw tokeens", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
+        .reverted;
     });
 
     it("only vault can withdraw tokens from subVault ", async function () {
@@ -170,19 +192,22 @@ describe("Vault", function () {
       const reciept = await ribbonVault.depositReceipts(sender.address);
       console.log(reciept);
       await vault.withdraw(amount);
+      const actual = await ethers.provider.getBalance(subVault.address);
+      expect(actual).to.be.eq(amount);
       await vault.withdrawTokens(amount);
     });
     it("only vault can withdraw tokens from subVault ", async function () {
       const amount = 100;
       console.log(await vault.balanceOf(sender.address));
       const reciept = await ribbonVault.depositReceipts(subVault.address);
-      console.log(reciept);
+      console.log("Grab Deposit Reciept", reciept);
       await vault.initiateWithdraw(amount);
     });
 
     it("should revert: only msg.sender and liquidator can access subVault", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(amount)).to.be.reverted;
+      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
+        .reverted;
     });
   });
 
@@ -285,7 +310,7 @@ describe("Vault", function () {
       console.log(bal, _bal);
       console.log(bal);
       await info();
-      await subVault.connect(debtBuyer).initiateWithdraw(_bal);
+      // await subVault.connect(debtBuyer).initiateWithdraw(_bal);
       await info();
 
       await subVault.connect(debtBuyer).completeWithdraw();
@@ -307,6 +332,8 @@ describe("UsdB", function () {
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let usdc: MockUSD;
+  let router: TestUniswapV3Router;
   let bowtie: BowTie;
   let vault: Vault;
   let weth: WETH9;
@@ -322,10 +349,16 @@ describe("UsdB", function () {
     weth = await WETH.deploy();
 
     const RibbonVault = await ethers.getContractFactory("MockRibbonThetaVault");
-    ribbonVault = await RibbonVault.deploy(weth.address);
+    ribbonVault = await RibbonVault.deploy(weth.address, weth.address);
 
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
+
+    const USDC = await ethers.getContractFactory("MockUSD");
+    usdc = await USDC.deploy();
+
+    const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+    router = await SwapRouter.deploy();
 
     const Bowtie = await ethers.getContractFactory("BowTie");
     bowtie = await Bowtie.deploy();
@@ -354,7 +387,9 @@ describe("UsdB", function () {
       weth.address,
       bowtie.address,
       bowtieStaking.address,
-      ribbonVault.address
+      ribbonVault.address,
+      usdc.address,
+      router.address
     );
     await staking.setRewardsDistribution(vault.address);
     await bowtieStaking.setRewardsDistribution(vault.address);
