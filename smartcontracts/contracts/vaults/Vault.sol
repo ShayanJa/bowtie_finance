@@ -155,8 +155,20 @@ contract Vault is BaseVault {
 
     function withdrawInstantly(uint256 amount) public {
         require(amount <= balanceOf(msg.sender), "Must be less than deposited");
+
         SubVault subVault = SubVault(subVaults[msg.sender]);
+        uint256 val = subVault.getValueInUnderlying();
+
+        require(
+            borrowed[msg.sender] <=
+                getValueOfCollateral(val.sub(amount))
+                    .mul(COLATERALIZATION_FACTOR)
+                    .div(FEE_DECIMALS),
+            "Too low of collateral"
+        );
+
         subVault.withdrawInstantly(amount);
+        _withdrawTokens(amount);
     }
 
     /// @notice Initiates withdraw of the collateral from ribbon
@@ -177,7 +189,7 @@ contract Vault is BaseVault {
 
     /// @notice Withdraw tokens from subvault
     /// @param amount Amount of Collaterall to withdraw from subvault
-    function withdrawTokens(uint256 amount) public {
+    function _withdrawTokens(uint256 amount) internal {
         SubVault subVault = subVaults[msg.sender];
         subVault.withdrawTokens(msg.sender, amount);
     }
@@ -219,7 +231,7 @@ contract Vault is BaseVault {
             //todo Sell all bonds
             Auction memory auction = auctions[i];
             //Get Collateral from Ribbon Deposit
-            
+
             uint256 bal = collateral.balanceOf(address(auction.subVault));
             auction.subVault.completeWithdraw();
             auction.subVault.withdrawAllCollateral();

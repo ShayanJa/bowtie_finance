@@ -4,17 +4,16 @@ import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import {
   MockOracle,
-  MockRibbonThetaVault,
   MockUSD,
   WETH9,
   Vault,
   SubVault,
   BowTie,
   IRibbonThetaVault,
-  ISwapRouter,
+  TestUniswapV3Router,
 } from "../typechain";
 
-describe.skip("Forked Vault", function () {
+describe("Forked Vault", function () {
   let sender: SignerWithAddress;
   let debtBuyer: SignerWithAddress;
   let ribbonVault: IRibbonThetaVault;
@@ -23,9 +22,8 @@ describe.skip("Forked Vault", function () {
   let usdc: MockUSD;
   let bowtie: BowTie;
   let weth: WETH9;
-  let router: ISwapRouter;
+  let router: TestUniswapV3Router;
   let vault: Vault;
-  let initSnapshotId: string;
 
   let initialDeposit: BigNumber;
   let liquidationPrice: BigNumber;
@@ -70,7 +68,7 @@ describe.skip("Forked Vault", function () {
     );
 
     router = await ethers.getContractAt(
-      "ISwapRouter",
+      "TestUniswapV3Router",
       "0xE592427A0AEce92De3Edee1F18E0157C05861564"
     );
 
@@ -108,15 +106,11 @@ describe.skip("Forked Vault", function () {
   });
 
   it("should deposit ETH", async function () {
-    console.log(weth.address);
-    console.log(vault.address);
     await weth.approve(vault.address, initialDeposit);
     await vault.depositETH({ value: initialDeposit });
     const bal = await vault.balanceOf(sender.address);
     const subVaultAddress = await vault.subVaults(sender.address);
     const subVault = await ethers.getContractAt("SubVault", subVaultAddress);
-    console.log(subVault.address);
-    console.log(ribbonVault);
     const reciept = await ribbonVault.depositReceipts(subVault.address);
     expect(reciept[1]).to.be.eq(bal);
     expect(bal).to.be.eq(initialDeposit);
@@ -145,7 +139,7 @@ describe.skip("Forked Vault", function () {
     await expect(vault.liquidate(sender.address)).to.be.reverted;
   });
 
-  describe.skip("Sub Vault", () => {
+  describe("Sub Vault", () => {
     let subVault: SubVault;
     before(async function () {
       const subVaultAddress = await vault.subVaults(sender.address);
@@ -161,19 +155,7 @@ describe.skip("Forked Vault", function () {
     });
     it("should revert: only owner allowed to withdraw tokeens", async function () {
       const amount = 100;
-      await expect(subVault.withdrawTokens(sender.address, amount)).to.be
-        .reverted;
-    });
-    it("only vault can withdraw tokens from subVault ", async function () {
-      // const amount = 100;
-      const amount = await vault.balanceOf(sender.address);
-      console.log(await vault.balanceOf(sender.address));
-      await vault.withdrawTokens(amount);
-    });
-    it("only vault can withdraw tokens from subVault ", async function () {
-      const amount = 100;
-      await vault.withdraw(amount);
-      await vault.withdrawTokens(amount);
+      await expect(subVault.withdrawInstantly(amount)).to.be.reverted;
     });
 
     it("should revert: only msg.sender and liquidator can access subVault", async function () {
@@ -181,9 +163,93 @@ describe.skip("Forked Vault", function () {
       await expect(subVault.withdrawTokens(sender.address, amount)).to.be
         .reverted;
     });
+
+    describe("Liquidations", () => {
+      it("should liquidate", async function () {
+        const depositAmount = 1e8;
+        await weth.deposit({ value: depositAmount });
+        await weth.approve(vault.address, depositAmount);
+        await vault.deposit(depositAmount);
+        const maxAmount = await vault.maximumBorrowAmount(sender.address);
+        await vault.borrow(maxAmount.sub(1));
+
+        await oracle.setPrice(liquidationPrice);
+        await vault.liquidate(sender.address);
+        const numAuctions = await vault.numAuctions();
+        expect(numAuctions).to.be.eq(1);
+        const auction = await vault.auctions(numAuctions.sub(1));
+        console.log(await vault.subVaults(sender.address));
+        expect(await vault.subVaults(sender.address)).to.be.eq(
+          "0x0000000000000000000000000000000000000000"
+        );
+        await expect(vault.initiateWithdraw(1)).to.be.reverted;
+        console.log(auction);
+      });
+      it("should buy debt", async () => {
+        const subVaultAddress = await vault.subVaults(debtBuyer.address);
+        console.log(subVaultAddress);
+        expect(subVaultAddress).to.be.eq(
+          "0x0000000000000000000000000000000000000000"
+        );
+        const numAuctions = await vault.numAuctions();
+        const auction = await vault.auctions(numAuctions.sub(1));
+        const usdbVal = auction.price;
+        const subVaultBond = auction.subVault;
+        liquidatedVaultAddress = auction.subVault;
+
+        // Have to use usdb to buy debt
+        const subVault = await ethers.getContractAt("SubVault", subVaultBond);
+        await vault
+          .connect(debtBuyer)
+          .depositETH({ value: initialDeposit.mul(2) });
+        await vault.connect(debtBuyer).borrow(usdbVal);
+        await usdb.connect(debtBuyer).approve(vault.address, usdbVal);
+        const liquidatorBal = await weth.balanceOf(debtBuyer.address);
+        console.log(liquidatorBal);
+        await vault.connect(debtBuyer).buyDebt(0);
+
+        const newNumAuctions = await vault.numAuctions();
+        expect(newNumAuctions).to.be.eq(0);
+        expect(await subVault.owner()).to.be.eq(debtBuyer.address);
+      });
+      it("should allow token withdraw", async () => {
+        const subVault = await ethers.getContractAt(
+          "SubVault",
+          liquidatedVaultAddress
+        );
+        const bal = await subVault.getValueInUnderlying();
+        const info = async () => {
+          const subvaultWeth = await weth.balanceOf(subVault.address);
+          const userWeth = await weth.balanceOf(debtBuyer.address);
+          const vaultWeth = await weth.balanceOf(vault.address);
+          const ribVault = await weth.balanceOf(ribbonVault.address);
+          console.log({ userWeth, subvaultWeth, vaultWeth, ribVault });
+        };
+        const userWeth = await weth.balanceOf(debtBuyer.address);
+        await info();
+        await subVault.connect(debtBuyer).withdrawAllCollateral();
+        await info();
+
+        // await vault.connect(debtBuyer).withdrawAll();
+        const _bal = await subVault.getValueInUnderlying();
+        console.log(bal, _bal);
+        console.log(bal);
+        const liquidatorBal = await weth.balanceOf(debtBuyer.address);
+        console.log(liquidatorBal);
+        expect(userWeth).to.be.gt(10);
+      });
+    });
   });
 
   describe("cleanup", () => {
+    it("Should revert: Has outstanding balance", async function () {
+      // const amount = 100;
+      const originalAmount = await vault.balanceOf(sender.address);
+      console.log(originalAmount);
+
+      await expect(vault.withdrawInstantly(originalAmount)).to.be.reverted;
+    });
+
     it("should pay back tokens", async function () {
       const depositAmount = 1e8;
       await vault.repay(depositAmount);
@@ -191,86 +257,21 @@ describe.skip("Forked Vault", function () {
       expect(await usdb.totalSupply()).to.be.eq(0);
     });
 
-    it("should withdraw all tokens", async function () {
-      initSnapshotId = await takeSnapshot();
-      const amount = await vault.balanceOf(sender.address);
-      await vault.withdraw(amount);
-      expect(await vault.balanceOf(sender.address)).to.be.eq(0);
-      revertToSnapShot(initSnapshotId);
-    });
-
-    it("should liquidate", async function () {
-      const depositAmount = 1e8;
-      await weth.deposit({ value: depositAmount });
-      await weth.approve(vault.address, depositAmount);
-      await vault.deposit(depositAmount);
-      const maxAmount = await vault.maximumBorrowAmount(sender.address);
-      await vault.borrow(maxAmount.sub(1));
-
-      await oracle.setPrice(liquidationPrice);
-      await vault.liquidate(sender.address);
-      const numAuctions = await vault.numAuctions();
-      expect(numAuctions).to.be.eq(1);
-      const auction = await vault.auctions(numAuctions.sub(1));
-      console.log(await vault.subVaults(sender.address));
-      expect(await vault.subVaults(sender.address)).to.be.eq(
-        "0x0000000000000000000000000000000000000000"
+    it("only vault can withdraw tokens from subVault 1", async function () {
+      // const amount = 100;
+      const originalAmount = await vault.balanceOf(sender.address);
+      console.log(originalAmount);
+      const originalSenderBalance = await ethers.provider.getBalance(
+        sender.address
       );
-      await expect(vault.initiateWithdraw(1)).to.be.reverted;
-      console.log(auction);
-    });
-    it("should buy debt", async () => {
-      const subVaultAddress = await vault.subVaults(debtBuyer.address);
-      console.log(subVaultAddress);
-      expect(subVaultAddress).to.be.eq(
-        "0x0000000000000000000000000000000000000000"
-      );
-      const numAuctions = await vault.numAuctions();
-      const auction = await vault.auctions(numAuctions.sub(1));
-      const usdbVal = auction.price;
-      const subVaultBond = auction.subVault;
-      liquidatedVaultAddress = auction.subVault;
+      console.log(await vault.borrowed(sender.address));
+      await vault.withdrawInstantly(originalAmount);
+      const newAmount = await vault.balanceOf(sender.address);
+      expect(newAmount).to.be.eq(0);
+      // await vault.withdrawTokens(originalAmount);
 
-      // Have to use usdb to buy debt
-      const subVault = await ethers.getContractAt("SubVault", subVaultBond);
-      await vault
-        .connect(debtBuyer)
-        .depositETH({ value: initialDeposit.mul(2) });
-      await vault.connect(debtBuyer).borrow(usdbVal);
-      await usdb.connect(debtBuyer).approve(vault.address, usdbVal);
-      const liquidatorBal = await weth.balanceOf(debtBuyer.address);
-      console.log(liquidatorBal);
-      await vault.connect(debtBuyer).buyDebt(0);
-
-      const newNumAuctions = await vault.numAuctions();
-      expect(newNumAuctions).to.be.eq(0);
-      expect(await subVault.owner()).to.be.eq(debtBuyer.address);
-    });
-    it("should allow token withdraw", async () => {
-      const subVault = await ethers.getContractAt(
-        "SubVault",
-        liquidatedVaultAddress
-      );
-      const bal = await subVault.getValueInUnderlying();
-      const info = async () => {
-        const subvaultWeth = await weth.balanceOf(subVault.address);
-        const userWeth = await weth.balanceOf(debtBuyer.address);
-        const vaultWeth = await weth.balanceOf(vault.address);
-        const ribVault = await weth.balanceOf(ribbonVault.address);
-        console.log({ userWeth, subvaultWeth, vaultWeth, ribVault });
-      };
-      const userWeth = await weth.balanceOf(debtBuyer.address);
-      await info();
-      await subVault.connect(debtBuyer).withdrawAllCollateral();
-      await info();
-
-      // await vault.connect(debtBuyer).withdrawAll();
-      const _bal = await subVault.getValueInUnderlying();
-      console.log(bal, _bal);
-      console.log(bal);
-      const liquidatorBal = await weth.balanceOf(debtBuyer.address);
-      console.log(liquidatorBal);
-      expect(userWeth).to.be.gt(10);
+      const newSenderBalance = await ethers.provider.getBalance(sender.address);
+      expect(newSenderBalance).to.be.gt(originalSenderBalance);
     });
   });
 });

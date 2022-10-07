@@ -16,6 +16,7 @@ import {
 describe("Vault", function () {
   let sender: SignerWithAddress;
   let debtBuyer: SignerWithAddress;
+
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
@@ -24,8 +25,8 @@ describe("Vault", function () {
   let bowtie: BowTie;
   let weth: WETH9;
   let vault: Vault;
-  let initSnapshotId: string;
 
+  let initSnapshotId: string;
   let initialDeposit: BigNumber;
   let liquidationPrice: BigNumber;
   let initialCollateralValue: BigNumber;
@@ -34,6 +35,7 @@ describe("Vault", function () {
 
   before(async function () {
     [sender, debtBuyer] = await ethers.getSigners();
+
     const initialPrice = BigNumber.from(277030883681);
     liquidationPrice = initialPrice.mul(9).div(10);
     initialDeposit = BigNumber.from("10").pow(18);
@@ -95,15 +97,20 @@ describe("Vault", function () {
 
   it("should deposit ETH", async function () {
     initSnapshotId = await takeSnapshot();
+
     await weth.approve(vault.address, initialDeposit);
     await vault.depositETH({ value: initialDeposit });
+
     const bal = await vault.balanceOf(sender.address);
     console.log(bal);
+
     const subVaultAddress = await vault.subVaults(sender.address);
     const subVault = await ethers.getContractAt("SubVault", subVaultAddress);
     const reciept = await ribbonVault.depositReceipts(subVault.address);
+
     console.log(reciept);
     console.log(initialDeposit);
+
     expect(reciept.amount).to.be.eq(bal);
     expect(bal).to.be.eq(initialDeposit);
 
@@ -130,6 +137,7 @@ describe("Vault", function () {
   });
   it("should revert: Can't borrow total colalteral amount", async function () {
     initSnapshotId = await takeSnapshot();
+
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await expect(vault.borrow(maxAmount)).to.be.revertedWith(
       "Borrowing too much"
@@ -139,9 +147,11 @@ describe("Vault", function () {
   });
   it("should borrow up to max sub 1", async function () {
     initSnapshotId = await takeSnapshot();
+
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await vault.borrow(maxAmount.sub(1));
     expect(await usdb.balanceOf(sender.address)).to.be.eq(maxAmount.sub(1));
+
     revertToSnapShot(initSnapshotId);
   });
   it("should borrow correct value", async function () {
@@ -190,7 +200,7 @@ describe("Vault", function () {
       const amount = 100;
       console.log(await vault.balanceOf(sender.address));
       const reciept = await ribbonVault.depositReceipts(subVault.address);
-      console.log(reciept);
+      console.log("Grab Deposit Reciept", reciept);
       await vault.initiateWithdraw(amount);
     });
 
@@ -295,7 +305,7 @@ describe("Vault", function () {
       };
       let userWeth = await weth.balanceOf(debtBuyer.address);
 
-      await vault.connect(debtBuyer).withdrawAll();
+      // await vault.connect(debtBuyer).withdrawAll();
       const _bal = await subVault.getValueInUnderlying();
       console.log(bal, _bal);
       console.log(bal);

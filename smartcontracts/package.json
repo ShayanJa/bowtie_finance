@@ -35,6 +35,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
+    "test:fork": "npx hardhat test test/fork.ts --network development",
     "mainnet-fork": "./scripts/mainnet-fork.sh",
     "deploy:rinkeby": "npx hardhat run ./scripts/deploy/rinkeby.ts --network rinkeby",
     "deploy:mainnet-fork": "npx hardhat run scripts/deploy-mainnet-fork.ts --network development"
