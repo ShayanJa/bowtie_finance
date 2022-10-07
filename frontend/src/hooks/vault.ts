@@ -19,7 +19,8 @@ export const useVault = (): [
   (amount: string) => Promise<void>,
   () => Promise<string>,
   (amount: string) => Promise<void>,
-  (amount: string) => Promise<void>
+  (amount: string) => Promise<void>,
+  () => Promise<void>
 ] => {
   const vault = useVaultContract();
   const oracle = useOracleContract();
@@ -242,6 +243,14 @@ export const useVault = (): [
     }
   }, [vault, address]);
 
+  const completeWithdrawl = useCallback(async () => {
+    try {
+      await vault.completeWithdraw();
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
   return [
     balance,
     allowance,
@@ -256,5 +265,6 @@ export const useVault = (): [
     maxWithdraw,
     withdrawTokens,
     initiateWithdrawl,
+    completeWithdrawl,
   ];
 };

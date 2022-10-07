@@ -28,6 +28,10 @@ async function main() {
     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
   );
 
+  const router = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+
+  const usdc = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+
   const ribbonVault = await ethers.getContractAt(
     "IRibbonThetaVault",
     "0x25751853Eab4D0eB3652B5eB6ecB102A2789644B"
@@ -63,13 +67,16 @@ async function main() {
     weth.address,
     bowtie.address,
     bowtieStaking.address,
-    ribbonVault.address
+    ribbonVault.address,
+    router,
+    usdc
   );
 
   await vault.deployed();
   await staking.setRewardsDistribution(vault.address);
   await bowtieStaking.setRewardsDistribution(vault.address);
   await usdb.transferOwnership(vault.address);
+
   console.log({
     weth: weth.address,
     usdb: usdb.address,
@@ -77,6 +84,8 @@ async function main() {
     vault: vault.address,
     staking: staking.address,
     bowtieStaking: bowtieStaking.address,
+    router: router,
+    usdc: usdc,
   });
   await sender.sendTransaction({
     to: testAddress,

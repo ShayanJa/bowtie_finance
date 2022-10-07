@@ -9,6 +9,8 @@ import {SubVault} from "./SubVault.sol";
 import {BaseVault} from "./base/Vault.sol";
 import {BowTie} from "../BowTie.sol";
 import {IStakingRewards} from "../interfaces/IStakingRewards.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 /// @title Vault
 /// @notice
@@ -25,6 +27,7 @@ contract Vault is BaseVault {
     mapping(address => SubVault) public subVaults;
     Auction[] public auctions;
     uint256 public numAuctions = 0;
+    address public USDC;
 
     uint256 public DISCOUNTED_DEBT_FEE = 500;
     uint256 public LP_PERCENT = 0;
@@ -46,11 +49,24 @@ contract Vault is BaseVault {
         address _weth,
         address _bowtie,
         address _bowtieStaking,
-        address _stratVault
-    ) BaseVault(_collateral, _usdB, _oracle, _stakingRewards, _weth) {
+        address _stratVault,
+        address _usdc,
+        address _swapRouter
+    )
+        BaseVault(
+            _collateral,
+            _usdB,
+            _oracle,
+            _stakingRewards,
+            _weth,
+            _usdc,
+            _swapRouter
+        )
+    {
         stratVault = IRibbonThetaVault(_stratVault);
         bowtie = BowTie(_bowtie);
         bowtieStaking = IStakingRewards(_bowtieStaking);
+        USDC = _usdc;
     }
 
     function balanceOf(address addr) public view override returns (uint256) {
@@ -166,6 +182,10 @@ contract Vault is BaseVault {
         subVault.withdrawTokens(msg.sender, amount);
     }
 
+    function completeWithdraw() public {
+        subVaults[msg.sender].completeWithdraw();
+    }
+
     /// @notice Buys the auctioned off options collateral
     /// @dev Sender should have enough usdb
     /// @param auctionId Name of the variable to set
@@ -199,9 +219,14 @@ contract Vault is BaseVault {
             //todo Sell all bonds
             Auction memory auction = auctions[i];
             //Get Collateral from Ribbon Deposit
-
+            
+            uint256 bal = collateral.balanceOf(address(auction.subVault));
             auction.subVault.completeWithdraw();
             auction.subVault.withdrawAllCollateral();
+            swapExactInputSingle(bal);
+
+            // Swap the assets in the auctions
+            // ISwapper : function ()
         }
     }
 

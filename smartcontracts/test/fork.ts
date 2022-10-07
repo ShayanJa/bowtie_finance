@@ -11,6 +11,7 @@ import {
   SubVault,
   BowTie,
   IRibbonThetaVault,
+  ISwapRouter,
 } from "../typechain";
 
 describe.skip("Forked Vault", function () {
@@ -19,8 +20,10 @@ describe.skip("Forked Vault", function () {
   let ribbonVault: IRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let usdc: MockUSD;
   let bowtie: BowTie;
   let weth: WETH9;
+  let router: ISwapRouter;
   let vault: Vault;
   let initSnapshotId: string;
 
@@ -56,9 +59,19 @@ describe.skip("Forked Vault", function () {
       "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     );
 
+    usdc = await ethers.getContractAt(
+      "MockUSD",
+      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    );
+
     ribbonVault = await ethers.getContractAt(
       "IRibbonThetaVault",
       "0x25751853Eab4D0eB3652B5eB6ecB102A2789644B"
+    );
+
+    router = await ethers.getContractAt(
+      "ISwapRouter",
+      "0xE592427A0AEce92De3Edee1F18E0157C05861564"
     );
 
     const STAKING = await ethers.getContractFactory("StakingRewards");
@@ -85,7 +98,9 @@ describe.skip("Forked Vault", function () {
       weth.address,
       bowtie.address,
       bowtieStaking.address,
-      ribbonVault.address
+      ribbonVault.address,
+      usdc.address,
+      router.address
     );
     await usdb.transferOwnership(vault.address);
     await staking.setRewardsDistribution(vault.address);
@@ -112,7 +127,7 @@ describe.skip("Forked Vault", function () {
       initialCollateralValue
     );
   });
-  it("should revert: Can't borrow total colalteral amount", async function () {
+  it("should revert: Can't borrow total collateral amount", async function () {
     const maxAmount = await vault.maximumBorrowAmount(sender.address);
     await expect(vault.borrow(maxAmount)).to.be.revertedWith(
       "Borrowing too much"

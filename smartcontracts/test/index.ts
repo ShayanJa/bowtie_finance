@@ -10,6 +10,7 @@ import {
   Vault,
   SubVault,
   BowTie,
+  TestUniswapV3Router,
 } from "../typechain";
 
 describe("Vault", function () {
@@ -18,6 +19,8 @@ describe("Vault", function () {
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let usdc: MockUSD;
+  let router: TestUniswapV3Router;
   let bowtie: BowTie;
   let weth: WETH9;
   let vault: Vault;
@@ -41,6 +44,12 @@ describe("Vault", function () {
 
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
+
+    const USDC = await ethers.getContractFactory("MockUSD");
+    usdc = await USDC.deploy();
+
+    const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+    router = await SwapRouter.deploy();
 
     const Bowtie = await ethers.getContractFactory("BowTie");
     bowtie = await Bowtie.deploy();
@@ -75,7 +84,9 @@ describe("Vault", function () {
       weth.address,
       bowtie.address,
       bowtieStaking.address,
-      ribbonVault.address
+      ribbonVault.address,
+      usdc.address,
+      router.address
     );
     await usdb.transferOwnership(vault.address);
     await staking.setRewardsDistribution(vault.address);
@@ -284,7 +295,7 @@ describe("Vault", function () {
       };
       let userWeth = await weth.balanceOf(debtBuyer.address);
 
-      // await vault.connect(debtBuyer).withdrawAll();
+      await vault.connect(debtBuyer).withdrawAll();
       const _bal = await subVault.getValueInUnderlying();
       console.log(bal, _bal);
       console.log(bal);
@@ -311,6 +322,8 @@ describe("UsdB", function () {
   let ribbonVault: MockRibbonThetaVault;
   let oracle: MockOracle;
   let usdb: MockUSD;
+  let usdc: MockUSD;
+  let router: TestUniswapV3Router;
   let bowtie: BowTie;
   let vault: Vault;
   let weth: WETH9;
@@ -330,6 +343,12 @@ describe("UsdB", function () {
 
     const USDB = await ethers.getContractFactory("MockUSD");
     usdb = await USDB.deploy();
+
+    const USDC = await ethers.getContractFactory("MockUSD");
+    usdc = await USDC.deploy();
+
+    const SwapRouter = await ethers.getContractFactory("TestUniswapV3Router");
+    router = await SwapRouter.deploy();
 
     const Bowtie = await ethers.getContractFactory("BowTie");
     bowtie = await Bowtie.deploy();
@@ -358,7 +377,9 @@ describe("UsdB", function () {
       weth.address,
       bowtie.address,
       bowtieStaking.address,
-      ribbonVault.address
+      ribbonVault.address,
+      usdc.address,
+      router.address
     );
     await staking.setRewardsDistribution(vault.address);
     await bowtieStaking.setRewardsDistribution(vault.address);
